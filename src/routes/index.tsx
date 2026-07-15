@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import marketBooth from "@/assets/market-booth.jpg";
+import { useEffect, useRef, useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -76,29 +75,31 @@ const PHRASES: Phrase[] = [
 function Index() {
   const [stage, setStage] = useState<Stage>("camera");
   const [phrase, setPhrase] = useState<Phrase | null>(null);
+  const [snapshot, setSnapshot] = useState<string | null>(null);
 
-  const startScan = () => {
+  const startScan = (dataUrl: string | null) => {
+    setSnapshot(dataUrl);
     setStage("scanning");
     setTimeout(() => setStage("detected"), 1800);
   };
 
   const reset = () => {
     setPhrase(null);
+    setSnapshot(null);
     setStage("camera");
   };
 
   return (
     <main className="min-h-screen bg-neutral-100 flex items-center justify-center p-4 sm:p-8">
-      {/* Phone frame */}
       <div className="relative w-full max-w-[400px] aspect-[9/19.5] bg-black rounded-[3rem] shadow-2xl overflow-hidden border-[10px] border-neutral-900">
-        {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-b-2xl z-30" />
 
         <div className="relative w-full h-full bg-black text-white overflow-hidden">
           {stage === "camera" && <CameraView onScan={startScan} />}
-          {stage === "scanning" && <ScanningView />}
+          {stage === "scanning" && <ScanningView snapshot={snapshot} />}
           {stage === "detected" && (
             <DetectedView
+              snapshot={snapshot}
               onPickPhrase={(p) => {
                 setPhrase(p);
                 setStage("phrase");
@@ -117,14 +118,122 @@ function Index() {
 
 /* ---------- Camera ---------- */
 
-function CameraView({ onScan }: { onScan: () => void }) {
+function CameraView({ onScan }: { onScan: (dataUrl: string | null) => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [status, setStatus] = useState<"idle" | "ready" | "denied" | "error">(
+    "idle",
+  );
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const start = async () => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus("error");
+        setErrorMsg("Camera API not available in this browser.");
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        });
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play().catch(() => {});
+        }
+        setStatus("ready");
+      } catch (err) {
+        const name = (err as { name?: string })?.name ?? "";
+        if (name === "NotAllowedError" || name === "PermissionDeniedError") {
+          setStatus("denied");
+        } else {
+          setStatus("error");
+          setErrorMsg(
+            (err as Error)?.message ?? "Unable to access the camera.",
+          );
+        }
+      }
+    };
+
+    start();
+
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    };
+  }, []);
+
+  const handleShutter = () => {
+    const video = videoRef.current;
+    let dataUrl: string | null = null;
+    if (video && video.videoWidth > 0) {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        try {
+          dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        } catch {
+          dataUrl = null;
+        }
+      }
+    }
+    // Stop the stream before moving on
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    onScan(dataUrl);
+  };
+
   return (
     <div className="absolute inset-0">
-      <img
-        src={marketBooth}
-        alt="Market booth viewfinder"
-        className="w-full h-full object-cover"
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        autoPlay
+        className="w-full h-full object-cover bg-neutral-900"
       />
+
+      {/* Permission / error overlays */}
+      {status !== "ready" && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 text-center px-6 z-10">
+          {status === "idle" && (
+            <>
+              <div className="w-12 h-12 rounded-full border-2 border-white/30 border-t-white animate-spin mb-4" />
+              <p className="text-sm text-white/80">Requesting camera…</p>
+            </>
+          )}
+          {status === "denied" && (
+            <>
+              <p className="text-base font-semibold">Camera access blocked</p>
+              <p className="text-xs text-white/70 mt-2 max-w-[240px]">
+                Allow camera permission in your browser settings, then reload
+                the page to scan.
+              </p>
+            </>
+          )}
+          {status === "error" && (
+            <>
+              <p className="text-base font-semibold">Camera unavailable</p>
+              <p className="text-xs text-white/70 mt-2 max-w-[260px]">
+                {errorMsg}
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="absolute top-0 inset-x-0 pt-10 px-5 flex items-center justify-between text-white/90 text-xs font-medium z-20">
         <span className="tracking-widest">MARKETLENS</span>
@@ -150,9 +259,10 @@ function CameraView({ onScan }: { onScan: () => void }) {
       {/* Shutter */}
       <div className="absolute bottom-0 inset-x-0 pb-10 flex items-center justify-center z-20">
         <button
-          onClick={onScan}
+          onClick={handleShutter}
+          disabled={status !== "ready"}
           aria-label="Scan"
-          className="w-20 h-20 rounded-full bg-white/95 border-4 border-white/40 shadow-lg active:scale-95 transition-transform flex items-center justify-center"
+          className="w-20 h-20 rounded-full bg-white/95 border-4 border-white/40 shadow-lg active:scale-95 transition-transform flex items-center justify-center disabled:opacity-40"
         >
           <span className="w-14 h-14 rounded-full bg-white ring-2 ring-black/10" />
         </button>
@@ -171,14 +281,18 @@ function Corner({ className = "" }: { className?: string }) {
 
 /* ---------- Scanning ---------- */
 
-function ScanningView() {
+function ScanningView({ snapshot }: { snapshot: string | null }) {
   return (
     <div className="absolute inset-0">
-      <img
-        src={marketBooth}
-        alt=""
-        className="w-full h-full object-cover brightness-75"
-      />
+      {snapshot ? (
+        <img
+          src={snapshot}
+          alt=""
+          className="w-full h-full object-cover brightness-75"
+        />
+      ) : (
+        <div className="w-full h-full bg-neutral-900" />
+      )}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-400/10 to-transparent" />
       <div className="absolute inset-x-8 top-[38%] h-1 bg-emerald-400 shadow-[0_0_20px_4px_rgba(52,211,153,0.7)] animate-scan" />
       <div className="absolute bottom-24 inset-x-0 text-center">
@@ -220,9 +334,11 @@ function Dot({ delay }: { delay: string }) {
 /* ---------- Detected ---------- */
 
 function DetectedView({
+  snapshot,
   onPickPhrase,
   onBack,
 }: {
+  snapshot: string | null;
   onPickPhrase: (p: Phrase) => void;
   onBack: () => void;
 }) {
@@ -234,11 +350,13 @@ function DetectedView({
 
   return (
     <div className="absolute inset-0 flex flex-col">
-      {/* Top: shrunken image preview with highlighted OCR */}
       <div className="relative h-[38%] flex-shrink-0">
-        <img src={marketBooth} alt="" className="w-full h-full object-cover" />
+        {snapshot ? (
+          <img src={snapshot} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full bg-neutral-800" />
+        )}
         <div className="absolute inset-0 bg-black/30" />
-        {/* OCR bounding box */}
         <div
           className={`absolute left-[10%] right-[10%] top-[10%] h-[22%] border-2 border-emerald-400 rounded-md transition-opacity ${reveal ? "opacity-100" : "opacity-0"}`}
         >
@@ -254,7 +372,6 @@ function DetectedView({
         </button>
       </div>
 
-      {/* Sheet */}
       <div className="flex-1 bg-white text-neutral-900 rounded-t-3xl -mt-6 relative shadow-2xl overflow-y-auto">
         <div className="w-10 h-1 bg-neutral-300 rounded-full mx-auto mt-2" />
         <div className="px-6 pt-4 pb-6">
