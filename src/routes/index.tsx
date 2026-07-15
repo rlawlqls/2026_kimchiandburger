@@ -10,11 +10,11 @@ export const Route = createFileRoute("/")({
         content:
           "Point your camera at a Korean market booth and instantly translate signs, hear pronunciations, and get useful phrases to order.",
       },
-      { property: "og:title", content: "MarketLens — Korean Market OCR" },
+      { property: "og:title", content: "MarketLens — Korean Market OCR & Translation" },
       {
         property: "og:description",
         content:
-          "Camera-based Korean menu translation for foreign visitors to traditional markets.",
+          "Point your camera at a Korean market booth and instantly translate signs, hear pronunciations, and get useful phrases to order.",
       },
     ],
   }),

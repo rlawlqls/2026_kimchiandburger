@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "MarketLens — Korean Market OCR & Translation" },
+      { name: "description", content: "Point your camera at a Korean market booth and instantly translate signs, hear pronunciations, and get useful phrases to order." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "MarketLens — Korean Market OCR & Translation" },
+      { property: "og:description", content: "Point your camera at a Korean market booth and instantly translate signs, hear pronunciations, and get useful phrases to order." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "MarketLens — Korean Market OCR & Translation" },
+      { name: "twitter:description", content: "Point your camera at a Korean market booth and instantly translate signs, hear pronunciations, and get useful phrases to order." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/730f9744-4e23-4edb-8d35-e3b2ccd066ae/id-preview-3e8963e6--8d6b1e34-c8ee-44e4-93f9-ab16d83ef018.lovable.app-1784094052630.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/730f9744-4e23-4edb-8d35-e3b2ccd066ae/id-preview-3e8963e6--8d6b1e34-c8ee-44e4-93f9-ab16d83ef018.lovable.app-1784094052630.png" },
     ],
     links: [
       {
