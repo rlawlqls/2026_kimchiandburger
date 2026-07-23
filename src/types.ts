@@ -29,10 +29,30 @@ export interface MenuItem {
   priceTypical: string;
   spicy: 0 | 1 | 2 | 3 | 4;
   allergens: Allergen[];
+  /** Human-readable full ingredient list shown on the detail panel. */
+  ingredients: string[];
   emoji: string;
   image: string | null;
   story: string;
   phrases: Phrase[];
+}
+
+export type SpiceLevel = 0 | 1 | 2 | 3 | 4;
+
+/** Persisted user profile — name shown at top, plus ordering personalization. */
+export interface UserProfile {
+  name: string;
+  spiceTolerance: SpiceLevel;
+  allergies: Allergen[];
+}
+
+/** One entry in the local timeline — written only when the user opens a detail. */
+export interface ScanHistoryEntry {
+  menuId: string;
+  hangul: string;
+  roman: string;
+  emoji: string;
+  timestamp: number; // Date.now() at the moment the detail panel opened
 }
 
 export interface DetectedItem {

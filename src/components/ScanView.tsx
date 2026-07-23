@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cropVideoToRect } from "../utils/crop";
 
 interface Props {
   ocrState: "idle" | "loading" | "done" | "error";
@@ -8,9 +9,11 @@ interface Props {
 
 export default function ScanView({ ocrState, onImage, onRetry }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const reticleRef = useRef<HTMLDivElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [camera, setCamera] = useState<"idle" | "ready" | "denied" | "error">("idle");
+  const [askUpload, setAskUpload] = useState(false);
 
   useEffect(() => {
     if (ocrState !== "idle") return;
@@ -57,16 +60,32 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
 
   const handleShutter = () => {
     const video = videoRef.current;
+    const reticle = reticleRef.current;
     if (!video || video.videoWidth === 0) return;
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+
+    // Only read the reticle box (§ "OCR only from the bounding box"). Fall back to
+    // the full frame if the crop can't be computed for any reason.
+    let dataUrl: string | null = null;
+    if (reticle) {
+      dataUrl = cropVideoToRect(video, reticle.getBoundingClientRect());
+    }
+    if (!dataUrl) {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(video, 0, 0);
+      dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+    }
     stopStream();
     onImage(dataUrl);
+  };
+
+  // Explicit consent before opening the OS file picker (§ upload permission).
+  const confirmUpload = () => {
+    setAskUpload(false);
+    fileRef.current?.click();
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,9 +162,9 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
         <span className="rounded-full bg-black/40 px-2 py-1 backdrop-blur-sm">KO → EN</span>
       </div>
 
-      {/* Reticle */}
+      {/* Reticle — this box IS the OCR capture region (§ crop to bounding box) */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="relative h-40 w-64">
+        <div ref={reticleRef} className="relative h-40 w-64">
           <Corner className="left-0 top-0" />
           <Corner className="right-0 top-0 rotate-90" />
           <Corner className="bottom-0 right-0 rotate-180" />
@@ -170,7 +189,7 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => fileRef.current?.click()}
+            onClick={() => setAskUpload(true)}
             className="rounded-full bg-white/15 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm active:scale-95"
           >
             📷 Upload photo
@@ -186,12 +205,39 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
           ref={fileRef}
           type="file"
           accept="image/*"
-          capture="environment"
           onChange={handleFile}
           className="hidden"
           aria-hidden="true"
         />
       </div>
+
+      {/* Explicit upload-permission dialog */}
+      {askUpload && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 px-6">
+          <div className="w-full max-w-[300px] rounded-2xl bg-white p-5 text-center text-neutral-900">
+            <p className="text-2xl">🖼️</p>
+            <p className="mt-2 text-base font-semibold">Access a photo?</p>
+            <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+              Allow Jangbogi to open one photo from your device. We only read the menu text in it —
+              the image never leaves your phone except to recognize the menu.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setAskUpload(false)}
+                className="flex-1 rounded-full bg-neutral-100 py-2.5 text-sm font-medium text-neutral-600 active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmUpload}
+                className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white active:scale-95"
+              >
+                Allow
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

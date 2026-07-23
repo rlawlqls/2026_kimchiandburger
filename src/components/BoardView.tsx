@@ -31,8 +31,8 @@ export default function BoardView({ image, detected, rawTokens, engine, onSelect
         )}
       </div>
 
-      {/* Board photo + tappable overlays */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Board photo + tappable overlays (no scroll — fits the frame) */}
+      <div className="flex-1 overflow-hidden">
         <div className="relative w-full">
           <img src={image} alt="Scanned menu board" className="block w-full" />
           {detected.map((item, i) => {

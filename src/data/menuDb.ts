@@ -6,6 +6,7 @@ export const MENU_DB: MenuItem[] = [
   // ───────── 떡볶이류 ─────────
   {
     id: "tteokbokki",
+    ingredients: ["rice cake (tteok)", "fish cake (eomuk)", "gochujang", "sugar", "scallion"],
     hangul: "떡볶이",
     aliases: ["떡뽁이", "떡복이", "떡보끼", "떡볶기", "즉석떡볶이"],
     roman: "tteok-bokki",
@@ -23,6 +24,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "rabokki",
+    ingredients: ["rice cake", "ramen noodles", "fish cake", "gochujang", "boiled egg", "scallion"],
     hangul: "라볶이",
     aliases: ["라뽁이", "라복이", "라볶기"],
     roman: "ra-bokki",
@@ -40,6 +42,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "cheese-tteokbokki",
+    ingredients: ["rice cake", "fish cake", "gochujang", "mozzarella cheese", "sugar", "scallion"],
     hangul: "치즈떡볶이",
     aliases: ["치즈떡뽁이", "치즈떡복이", "치즈 떡볶이"],
     roman: "chi-jeu tteok-bokki",
@@ -57,6 +60,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "gukmul-tteokbokki",
+    ingredients: ["rice cake", "fish cake", "gochujang", "anchovy broth", "sugar", "scallion"],
     hangul: "국물떡볶이",
     aliases: ["국물떡뽁이", "국물 떡볶이", "국믈떡볶이"],
     roman: "guk-mul tteok-bokki",
@@ -76,6 +80,7 @@ export const MENU_DB: MenuItem[] = [
   // ───────── 튀김류 ─────────
   {
     id: "twigim",
+    ingredients: ["wheat flour batter", "assorted vegetables & seafood", "cooking oil"],
     hangul: "튀김",
     aliases: ["모둠튀김", "모듬튀김", "튀김모둠"],
     roman: "twi-gim",
@@ -93,6 +98,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "ojingeo-twigim",
+    ingredients: ["squid", "wheat flour batter", "cooking oil"],
     hangul: "오징어튀김",
     aliases: ["오징어 튀김", "오징이튀김"],
     roman: "o-jing-eo twi-gim",
@@ -110,6 +116,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "sangchu-twigim",
+    ingredients: ["wheat flour fritters", "fresh lettuce", "soy-chili sauce", "cooking oil"],
     hangul: "상추튀김",
     aliases: ["상추 튀김", "상치튀김"],
     roman: "sang-chu twi-gim",
@@ -127,6 +134,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "gimmari",
+    ingredients: ["dried seaweed (gim)", "glass noodles (dangmyeon)", "wheat flour batter", "cooking oil"],
     hangul: "김말이",
     aliases: ["김마리", "김말이튀김", "김말리"],
     roman: "gim-mari",
@@ -144,6 +152,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "yachae-twigim",
+    ingredients: ["carrot", "onion", "cabbage", "wheat flour batter", "cooking oil"],
     hangul: "야채튀김",
     aliases: ["야채 튀김", "채소튀김"],
     roman: "ya-chae twi-gim",
@@ -161,6 +170,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "goguma-twigim",
+    ingredients: ["sweet potato", "wheat flour batter", "cooking oil"],
     hangul: "고구마튀김",
     aliases: ["고구마 튀김", "고구마튀김"],
     roman: "go-gu-ma twi-gim",
@@ -178,6 +188,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "saeu-twigim",
+    ingredients: ["whole shrimp", "wheat flour batter", "cooking oil"],
     hangul: "새우튀김",
     aliases: ["새우 튀김", "세우튀김"],
     roman: "sae-u twi-gim",
@@ -195,6 +206,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "mandu-twigim",
+    ingredients: ["wheat wrapper", "pork", "chives", "glass noodles", "cooking oil"],
     hangul: "만두튀김",
     aliases: ["만두 튀김", "튀김만두"],
     roman: "man-du twi-gim",
@@ -214,6 +226,7 @@ export const MENU_DB: MenuItem[] = [
   // ───────── 순대·어묵 ─────────
   {
     id: "sundae",
+    ingredients: ["pig intestine casing", "glass noodles", "pig blood", "glutinous rice", "salt"],
     hangul: "순대",
     aliases: ["순데", "슌대"],
     roman: "sundae",
@@ -231,6 +244,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "sundae-bokkeum",
+    ingredients: ["sundae", "perilla leaves", "cabbage", "onion", "gochujang", "cooking oil"],
     hangul: "순대볶음",
     aliases: ["순대 볶음", "순데볶음", "순대복음"],
     roman: "sundae-bokkeum",
@@ -248,6 +262,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "eomuk",
+    ingredients: ["fish cake", "anchovy-kelp broth", "radish", "scallion"],
     hangul: "어묵",
     aliases: ["오뎅", "오댕"],
     roman: "eo-muk",
@@ -265,6 +280,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "multteok",
+    ingredients: ["rice cake", "fish cake broth (anchovy, kelp)"],
     hangul: "물떡",
     aliases: ["물떡이", "물 떡"],
     roman: "mul-tteok",
@@ -284,6 +300,7 @@ export const MENU_DB: MenuItem[] = [
   // ───────── 김밥류 ─────────
   {
     id: "gimbap",
+    ingredients: ["rice", "dried seaweed (gim)", "egg", "ham", "carrot", "pickled radish", "spinach", "sesame oil"],
     hangul: "김밥",
     aliases: ["김빱", "긴밥"],
     roman: "gimbap",
@@ -301,6 +318,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "chamchi-gimbap",
+    ingredients: ["rice", "dried seaweed", "canned tuna", "mayonnaise", "egg", "carrot", "pickled radish"],
     hangul: "참치김밥",
     aliases: ["참치 김밥", "참치김빱"],
     roman: "cham-chi gimbap",
@@ -318,6 +336,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "cheese-gimbap",
+    ingredients: ["rice", "dried seaweed", "cheddar cheese", "egg", "ham", "carrot", "pickled radish"],
     hangul: "치즈김밥",
     aliases: ["치즈 김밥", "치즈김빱"],
     roman: "chi-jeu gimbap",
@@ -335,6 +354,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "yachae-gimbap",
+    ingredients: ["rice", "dried seaweed", "carrot", "spinach", "pickled radish", "egg", "sesame oil"],
     hangul: "야채김밥",
     aliases: ["야채 김밥", "채소김밥"],
     roman: "ya-chae gimbap",
@@ -352,6 +372,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "chungmu-gimbap",
+    ingredients: ["rice", "dried seaweed", "seasoned squid", "radish kimchi", "gochugaru"],
     hangul: "충무김밥",
     aliases: ["충무 김밥", "충무김빱"],
     roman: "chung-mu gimbap",
@@ -371,6 +392,7 @@ export const MENU_DB: MenuItem[] = [
   // ───────── 면류 ─────────
   {
     id: "ramyeon",
+    ingredients: ["instant wheat noodles", "soup powder (gochugaru)", "egg", "scallion"],
     hangul: "라면",
     aliases: ["라멘", "라먼"],
     roman: "ra-myeon",
@@ -388,6 +410,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "cheese-ramyeon",
+    ingredients: ["instant wheat noodles", "soup powder", "cheese slice", "egg", "scallion"],
     hangul: "치즈라면",
     aliases: ["치즈 라면", "치스라면"],
     roman: "chi-jeu ra-myeon",
@@ -405,6 +428,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "tteok-ramyeon",
+    ingredients: ["instant wheat noodles", "rice cake", "soup powder", "egg", "scallion"],
     hangul: "떡라면",
     aliases: ["떡 라면", "떡라멘"],
     roman: "tteok ra-myeon",
@@ -422,6 +446,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "jjolmyeon",
+    ingredients: ["chewy wheat noodles", "gochujang", "sugar", "vinegar", "cabbage", "carrot", "cucumber"],
     hangul: "쫄면",
     aliases: ["졸면", "쫄먼"],
     roman: "jjol-myeon",
@@ -439,6 +464,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "bibim-guksu",
+    ingredients: ["thin wheat noodles (somyeon)", "gochujang", "sugar", "vinegar", "cucumber", "egg"],
     hangul: "비빔국수",
     aliases: ["비빔 국수", "비빔국시"],
     roman: "bibim-guksu",
@@ -456,6 +482,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "janchi-guksu",
+    ingredients: ["thin wheat noodles", "anchovy-kelp broth", "egg garnish", "zucchini", "dried seaweed"],
     hangul: "잔치국수",
     aliases: ["잔치 국수", "잔칫국수", "잔치국시"],
     roman: "janchi-guksu",
@@ -473,6 +500,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "udon",
+    ingredients: ["udon wheat noodles", "kelp-bonito broth", "fish cake", "scallion"],
     hangul: "우동",
     aliases: ["우돈", "우둥"],
     roman: "u-dong",
@@ -492,6 +520,7 @@ export const MENU_DB: MenuItem[] = [
   // ───────── 밥류 ─────────
   {
     id: "bokkeumbap",
+    ingredients: ["rice", "egg", "mixed vegetables", "sesame oil", "soy sauce"],
     hangul: "볶음밥",
     aliases: ["볶음 밥", "복음밥", "뽂음밥"],
     roman: "bokkeum-bap",
@@ -509,6 +538,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "kimchi-bokkeumbap",
+    ingredients: ["rice", "aged kimchi", "egg", "gochujang", "butter", "scallion"],
     hangul: "김치볶음밥",
     aliases: ["김치 볶음밥", "김치복음밥"],
     roman: "kimchi bokkeum-bap",
@@ -526,6 +556,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "omurice",
+    ingredients: ["rice", "egg", "mixed vegetables", "ham", "ketchup"],
     hangul: "오므라이스",
     aliases: ["오무라이스", "오믈라이스", "옴라이스"],
     roman: "o-meu-ra-i-seu",
@@ -543,6 +574,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "jeyuk-deopbap",
+    ingredients: ["pork", "gochujang", "gochugaru", "onion", "garlic", "rice"],
     hangul: "제육덮밥",
     aliases: ["제육 덮밥", "재육덮밥", "제육덥밥"],
     roman: "je-yuk deop-bap",
@@ -560,6 +592,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "donkkaseu",
+    ingredients: ["pork loin", "wheat flour", "breadcrumbs", "egg", "brown sauce"],
     hangul: "돈까스",
     aliases: ["돈가스", "돈카스", "돈까쓰"],
     roman: "don-kka-seu",
@@ -579,6 +612,7 @@ export const MENU_DB: MenuItem[] = [
   // ───────── 분식 기타 ─────────
   {
     id: "mandu",
+    ingredients: ["wheat wrapper", "pork", "tofu", "chives", "glass noodles", "garlic"],
     hangul: "만두",
     aliases: ["만듀", "손만두"],
     roman: "man-du",
@@ -596,6 +630,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "jjinmandu",
+    ingredients: ["wheat wrapper", "pork", "tofu", "chives", "cabbage"],
     hangul: "찐만두",
     aliases: ["찐 만두", "찜만두"],
     roman: "jjin-man-du",
@@ -613,6 +648,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "gunmandu",
+    ingredients: ["wheat wrapper", "pork", "chives", "glass noodles", "cooking oil"],
     hangul: "군만두",
     aliases: ["군 만두", "구운만두"],
     roman: "gun-man-du",
@@ -630,6 +666,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "gyeranppang",
+    ingredients: ["wheat flour", "whole egg", "milk", "sugar", "butter"],
     hangul: "계란빵",
     aliases: ["계란 빵", "게란빵", "달걀빵"],
     roman: "gye-ran-ppang",
@@ -647,6 +684,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "toast",
+    ingredients: ["white bread", "egg", "cabbage", "ham", "butter", "sugar", "ketchup"],
     hangul: "토스트",
     aliases: ["토스투", "길거리토스트", "햄토스트"],
     roman: "to-seu-teu",
@@ -664,6 +702,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "hotteok",
+    ingredients: ["wheat flour dough", "brown sugar", "cinnamon", "chopped nuts", "cooking oil"],
     hangul: "호떡",
     aliases: ["호덕", "씨앗호떡"],
     roman: "ho-tteok",
@@ -681,6 +720,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "eomuk-gukmul",
+    ingredients: ["fish cake broth", "anchovy", "kelp", "radish"],
     hangul: "어묵국물",
     aliases: ["어묵 국물", "오뎅국물", "오뎅국"],
     roman: "eo-muk guk-mul",
@@ -698,6 +738,7 @@ export const MENU_DB: MenuItem[] = [
   },
   {
     id: "cupbap",
+    ingredients: ["rice", "egg", "assorted toppings", "soy sauce", "seaweed flakes"],
     hangul: "컵밥",
     aliases: ["컵 밥", "콥밥"],
     roman: "keop-bap",
