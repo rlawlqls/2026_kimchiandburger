@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { DetectedItem, MenuItem, UserProfile } from "../types";
 import { hasKoreanVoice, speak } from "../utils/speak";
 import { buildOrderPhrase, clampQty, MAX_QTY, MIN_QTY } from "../utils/orderPhrase";
+import { otherPhrases, type OtherPhrase } from "../utils/otherPhrases";
 import { artFor } from "../data/foodArt";
 
 const SPICY_LABEL = ["Not spicy", "Mild", "Medium", "Spicy", "Very spicy"] as const;
@@ -25,6 +26,7 @@ export default function DetailView({
 
   const [qty, setQty] = useState(1);
   const orderPhrase = useMemo(() => buildOrderPhrase(menu, qty), [menu, qty]);
+  const others = useMemo(() => otherPhrases(menu, profile, qty), [menu, profile, qty]);
 
   // Allergens the user flagged that this dish contains.
   const flagged = menu.allergens.filter((a) => profile.allergies.includes(a));
@@ -113,6 +115,19 @@ export default function DetailView({
           </button>
         </div>
 
+        {/* Other things you can say — situational, profile/dish-aware */}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[13px] font-black tracking-[-0.01em]">다른 표현</span>
+            <span className="text-[10.5px] text-[var(--ink2)]">Other things you can say</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {others.map((p, i) => (
+              <OtherCard key={i} phrase={p} voiceOk={voiceOk} />
+            ))}
+          </div>
+        </div>
+
         {/* Story / description */}
         {menu.story && (
           <p className="text-[12.5px] leading-[1.6] text-[var(--ink2)]">{menu.story}</p>
@@ -179,6 +194,39 @@ export default function DetailView({
           </button>
         </div>
     </>
+  );
+}
+
+function OtherCard({ phrase, voiceOk }: { phrase: OtherPhrase; voiceOk: boolean }) {
+  const shell =
+    phrase.tone === "allergy"
+      ? "border-red-200 bg-[var(--gochu-bg)]"
+      : phrase.tone === "spice"
+        ? "border-amber-200 bg-[var(--amber-bg)]"
+        : "border-[var(--line)] bg-white";
+  const tagColor =
+    phrase.tone === "allergy"
+      ? "text-[var(--gochu)]"
+      : phrase.tone === "spice"
+        ? "text-[var(--amber)]"
+        : "text-[var(--jade-d)]";
+  return (
+    <div className={`relative flex flex-col gap-[3px] rounded-[14px] border py-[11px] pl-[13px] pr-14 ${shell}`}>
+      <span className={`text-[9.5px] font-bold leading-none tracking-[0.05em] ${tagColor}`}>
+        {phrase.tag}
+      </span>
+      <p className="text-[19px] font-black leading-[1.2] tracking-[-0.01em]">{phrase.ko}</p>
+      <p className="mono text-[11.5px] text-[var(--jade-d)]">{phrase.roman}</p>
+      <p className="text-[11px] text-[var(--ink2)]">“{phrase.en}”</p>
+      <button
+        onClick={() => speak(phrase.ko)}
+        disabled={!voiceOk}
+        aria-label={`Play: ${phrase.ko}`}
+        className="absolute right-[11px] top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--bg2)] text-base text-[var(--ink)] active:scale-90 disabled:opacity-40"
+      >
+        🔊
+      </button>
+    </div>
   );
 }
 

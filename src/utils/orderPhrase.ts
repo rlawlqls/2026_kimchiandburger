@@ -13,7 +13,7 @@ export function clampQty(qty: number): number {
 }
 
 /** Korean number word for the 개 counter; falls back to the Sino digit past 10. */
-function koCount(qty: number): { ko: string; roman: string } {
+export function koCount(qty: number): { ko: string; roman: string } {
   if (qty >= 1 && qty <= 10) return { ko: KO_COUNT[qty], roman: KO_COUNT_ROMAN[qty] };
   return { ko: String(qty), roman: String(qty) };
 }
