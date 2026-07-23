@@ -141,8 +141,8 @@ export default function App() {
             allergyCount={profile.allergies.length}
           />
 
-          {/* Active panel — fills all space above the tab bar */}
-          <div className="relative min-h-0 flex-1 overflow-hidden">
+          {/* Active panel — fills all space above the tab bar; scrolls as one column */}
+          <div className="relative min-h-0 flex-1 overflow-y-auto">
             {tab === "scan" && (
               <ScanView
                 ocrState={ocrState}

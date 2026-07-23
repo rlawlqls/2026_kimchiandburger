@@ -158,7 +158,7 @@ export default function ScanView({
   ).length;
 
   return (
-    <div className="flex h-full flex-col gap-3 px-[18px] pb-2 pt-4">
+    <div className="flex min-h-full flex-col gap-3 px-[18px] pb-2 pt-4">
       {/* eyebrow */}
       <div className="flex items-baseline justify-between">
         <div className="text-[22px] font-black tracking-[-0.02em]">Scan</div>
@@ -288,7 +288,7 @@ export default function ScanView({
                 Retake
               </button>
             </div>
-            <div className="flex flex-wrap content-start gap-2 overflow-y-auto">
+            <div className="flex flex-wrap content-start gap-2">
               {detected.map((it) => {
                 const warn = it.menu.allergens.some((a) => profile.allergies.includes(a));
                 return (
