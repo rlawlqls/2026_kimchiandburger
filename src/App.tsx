@@ -14,7 +14,6 @@ import DetailSheet from "./components/DetailSheet";
 import ListenSheet from "./components/ListenSheet";
 import OrdersPanel from "./components/OrdersPanel";
 import ProfilePanel from "./components/ProfilePanel";
-import StatusBar from "./components/StatusBar";
 import TabBar, { type Tab } from "./components/TabBar";
 
 type OcrState = "idle" | "loading" | "done" | "error";
@@ -133,8 +132,6 @@ export default function App() {
       {/* Full-screen on phones; framed device preview on larger screens */}
       <div className="relative h-dvh w-full overflow-hidden bg-[#1c1c1e] sm:h-[812px] sm:max-w-[400px] sm:rounded-[44px] sm:border-[9px] sm:border-[#1c1c1e] sm:shadow-[0_30px_70px_rgba(0,0,0,0.28)]">
         <div className="relative flex h-full w-full flex-col overflow-hidden bg-[var(--bg)] text-[var(--ink)] sm:rounded-[36px]">
-          <div className="notch" />
-          <StatusBar />
           <AppHeader
             name={profile.name}
             spice={profile.spiceTolerance}

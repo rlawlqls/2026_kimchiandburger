@@ -17,12 +17,6 @@ export default function AppHeader({
         <div className="flex-1 text-[21px] font-black tracking-[-0.02em] text-[var(--ink)]">
           Hi, <span>{display}</span>
         </div>
-        <span
-          aria-hidden
-          className="flex h-8 w-8 items-center justify-center rounded-full text-base text-[var(--ink2)]"
-        >
-          ◍
-        </span>
       </div>
 
       <div className="mt-2 flex gap-1.5">

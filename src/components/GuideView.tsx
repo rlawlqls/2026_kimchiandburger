@@ -19,13 +19,13 @@ export default function GuideView({
   const items = MENU_DB.slice(safePage * PER_PAGE, safePage * PER_PAGE + PER_PAGE);
 
   return (
-    <div className="flex h-full flex-col px-[18px] pb-2 pt-4">
+    <div className="flex min-h-full flex-col px-[18px] pb-2 pt-4">
       <div className="flex items-baseline justify-between">
         <span className="text-[22px] font-black tracking-[-0.02em]">Food guide</span>
         <span className="text-xs text-[var(--ink2)]">{MENU_DB.length} dishes</span>
       </div>
 
-      <div className="mt-3 grid min-h-0 flex-1 grid-cols-2 content-start gap-2.5 overflow-y-auto">
+      <div className="mt-3 grid grid-cols-2 content-start gap-2.5">
         {items.map((menu) => {
           const art = artFor(menu.id);
           const risk = menu.allergens.some((a) => profile.allergies.includes(a));

@@ -17,7 +17,37 @@ const DEFAULT_BOX: BoxPct = { left: 0.08, top: 0.24, width: 0.84, height: 0.48 }
 const MIN_W = 0.18;
 const MIN_H = 0.14;
 
+// Remember one-time permission consents so we don't re-prompt on every scan (§5-A).
+const UPLOAD_OK_KEY = "jangbogi.uploadConsent";
+const readConsent = (key: string): boolean => {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+};
+const writeConsent = (key: string) => {
+  try {
+    localStorage.setItem(key, "1");
+  } catch {
+    /* private mode — fall back to per-session asking */
+  }
+};
+
 type Media = "camera" | "photo" | "none";
+
+// Grab the full current video frame as a still image so the captured photo stays
+// on screen (instead of the live feed running on / turning grey).
+function captureFrame(video: HTMLVideoElement): string | null {
+  if (!video.videoWidth || !video.videoHeight) return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.drawImage(video, 0, 0);
+  return canvas.toDataURL("image/jpeg", 0.92);
+}
 
 export default function ScanView({
   ocrState,
@@ -36,13 +66,19 @@ export default function ScanView({
   const [box, setBox] = useState<BoxPct>(DEFAULT_BOX);
   const [media, setMedia] = useState<Media>("none");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  // A frozen still of the moment we scanned (camera path); keeps the shot on screen.
+  const [frozenUrl, setFrozenUrl] = useState<string | null>(null);
   const [askUpload, setAskUpload] = useState(false);
 
   const showResults = ocrState === "done" || ocrState === "error";
+  // The box may only be adjusted while aiming — once a shot is taken it's locked.
+  const locked = ocrState !== "idle";
+  // What the finder is currently showing.
+  const displayUrl = frozenUrl ?? (media === "photo" ? photoUrl : null);
 
-  // Start the camera whenever we are back to an idle finder (and not showing a photo).
+  // Start the camera whenever we are back to an idle finder (and not showing a still).
   useEffect(() => {
-    if (ocrState !== "idle" || photoUrl) return;
+    if (ocrState !== "idle" || photoUrl || frozenUrl) return;
     let cancelled = false;
 
     const start = async () => {
@@ -76,7 +112,7 @@ export default function ScanView({
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     };
-  }, [ocrState, photoUrl]);
+  }, [ocrState, photoUrl, frozenUrl]);
 
   const stopStream = () => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -85,51 +121,75 @@ export default function ScanView({
 
   useEffect(() => () => stopStream(), []);
 
-  // ---- drag / resize the crop box ----
+  // ---- drag / resize the crop box (aiming only) ----
   const dragRef = useRef<{ mode: "move" | "size"; startX: number; startY: number; box: BoxPct } | null>(
     null,
   );
 
   const onPointerDown = (mode: "move" | "size") => (e: React.PointerEvent) => {
-    if (showResults) return;
+    if (locked) return;
     e.preventDefault();
     e.stopPropagation();
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     dragRef.current = { mode, startX: e.clientX, startY: e.clientY, box };
   };
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    const d = dragRef.current;
-    const finder = finderRef.current;
-    if (!d || !finder) return;
-    const rect = finder.getBoundingClientRect();
-    const dx = (e.clientX - d.startX) / rect.width;
-    const dy = (e.clientY - d.startY) / rect.height;
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      const d = dragRef.current;
+      const finder = finderRef.current;
+      if (!d || !finder || locked) return;
+      const rect = finder.getBoundingClientRect();
+      const dx = (e.clientX - d.startX) / rect.width;
+      const dy = (e.clientY - d.startY) / rect.height;
 
-    if (d.mode === "move") {
-      const left = clamp(d.box.left + dx, 0, 1 - d.box.width);
-      const top = clamp(d.box.top + dy, 0, 1 - d.box.height);
-      setBox({ ...d.box, left, top });
-    } else {
-      const width = clamp(d.box.width + dx, MIN_W, 1 - d.box.left);
-      const height = clamp(d.box.height + dy, MIN_H, 1 - d.box.top);
-      setBox({ ...d.box, width, height });
-    }
-  }, []);
+      if (d.mode === "move") {
+        const left = clamp(d.box.left + dx, 0, 1 - d.box.width);
+        const top = clamp(d.box.top + dy, 0, 1 - d.box.height);
+        setBox({ ...d.box, left, top });
+      } else {
+        const width = clamp(d.box.width + dx, MIN_W, 1 - d.box.left);
+        const height = clamp(d.box.height + dy, MIN_H, 1 - d.box.top);
+        setBox({ ...d.box, height, width });
+      }
+    },
+    [locked],
+  );
 
   const onPointerUp = () => {
     dragRef.current = null;
   };
 
-  // ---- read the boxed region ----
-  const readArea = () => {
+  // ---- capture + read the boxed region ("Scan text") ----
+  const scanText = () => {
     const finder = finderRef.current;
-    const source = media === "photo" ? photoRef.current : videoRef.current;
-    if (!finder || !source) return;
+    if (!finder) return;
     const rect = finder.getBoundingClientRect();
-    const dataUrl = cropFromMedia(source, box, { width: rect.width, height: rect.height });
-    if (!dataUrl) return;
-    onImage(dataUrl);
+    const container = { width: rect.width, height: rect.height };
+
+    if (media === "camera") {
+      const video = videoRef.current;
+      if (!video) return;
+      const crop = cropFromMedia(video, box, container);
+      const frame = captureFrame(video); // freeze the shot on screen
+      if (frame) setFrozenUrl(frame);
+      stopStream();
+      if (crop) onImage(crop);
+    } else if (media === "photo") {
+      const source = photoRef.current;
+      if (!source) return;
+      const crop = cropFromMedia(source, box, container);
+      if (crop) onImage(crop);
+    }
+  };
+
+  const openUpload = () => {
+    // Ask for photo access only the first time; remember the choice afterwards.
+    if (readConsent(UPLOAD_OK_KEY)) {
+      fileRef.current?.click();
+    } else {
+      setAskUpload(true);
+    }
   };
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,6 +197,7 @@ export default function ScanView({
     e.target.value = "";
     if (!file) return;
     stopStream();
+    setFrozenUrl(null);
     const url = URL.createObjectURL(file);
     setPhotoUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
@@ -149,8 +210,9 @@ export default function ScanView({
   const retake = () => {
     if (photoUrl) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(null);
+    setFrozenUrl(null);
     setBox(DEFAULT_BOX);
-    onReset();
+    onReset(); // back to idle → camera restarts via effect
   };
 
   const warnN = detected.filter((it) =>
@@ -162,7 +224,6 @@ export default function ScanView({
       {/* eyebrow */}
       <div className="flex items-baseline justify-between">
         <div className="text-[22px] font-black tracking-[-0.02em]">Scan</div>
-        <span className="text-xs text-[var(--ink2)]">Only the box is read</span>
       </div>
 
       {/* finder */}
@@ -172,10 +233,10 @@ export default function ScanView({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
       >
-        {media === "photo" && photoUrl ? (
+        {displayUrl ? (
           <img
             ref={photoRef}
-            src={photoUrl}
+            src={displayUrl}
             alt="Menu to read"
             className="absolute inset-0 h-full w-full object-cover"
           />
@@ -189,21 +250,21 @@ export default function ScanView({
           />
         )}
 
-        {media === "none" && (
+        {media === "none" && !displayUrl && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-6 text-center text-[12.5px] leading-relaxed text-white/70">
             <span className="text-2xl opacity-40">⌗</span>
             <span>
               Camera unavailable —
               <br />
-              tap <b className="text-white">Upload photo</b> to read a menu
+              tap <b className="text-white">Upload</b> to read a menu
             </span>
           </div>
         )}
 
-        {/* crop box */}
-        {!showResults && media !== "none" && (
+        {/* crop box — outline only once locked so the captured shot stays visible */}
+        {!showResults && (media !== "none" || displayUrl) && (
           <div
-            className="absolute cursor-grab touch-none"
+            className={`absolute touch-none ${locked ? "cursor-default" : "cursor-grab"}`}
             style={{
               left: `${box.left * 100}%`,
               top: `${box.top * 100}%`,
@@ -212,15 +273,19 @@ export default function ScanView({
             }}
             onPointerDown={onPointerDown("move")}
           >
-            <div className="absolute inset-0 rounded-md shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+            {!locked && (
+              <div className="absolute inset-0 rounded-md shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]" />
+            )}
             <Bracket className="left-[-2px] top-[-2px] border-b-0 border-r-0" />
             <Bracket className="right-[-2px] top-[-2px] border-b-0 border-l-0" />
             <Bracket className="bottom-[-2px] left-[-2px] border-r-0 border-t-0" />
             <Bracket className="bottom-[-2px] right-[-2px] border-l-0 border-t-0" />
-            <div
-              onPointerDown={onPointerDown("size")}
-              className="absolute -bottom-3 -right-3 h-[26px] w-[26px] cursor-nwse-resize rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
-            />
+            {!locked && (
+              <div
+                onPointerDown={onPointerDown("size")}
+                className="absolute -bottom-3 -right-3 h-[26px] w-[26px] cursor-nwse-resize rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
+              />
+            )}
             {/* scanline sweep while reading */}
             {ocrState === "loading" && (
               <div className="animate-scan absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent" />
@@ -231,26 +296,36 @@ export default function ScanView({
         {/* hint */}
         {!showResults && (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 flex items-center justify-between text-[11px] text-white/80">
-            <span>{ocrState === "loading" ? "Reading…" : "Drag the box over the sign"}</span>
+            <span>
+              {ocrState === "loading"
+                ? "Reading…"
+                : locked
+                  ? "Captured"
+                  : "Aim the box at a menu sign"}
+            </span>
           </div>
         )}
       </div>
 
-      {/* action buttons */}
-      <div className="flex gap-2.5">
+      {/* action buttons — big green Scan text (primary) + small red Upload */}
+      <div className="flex items-stretch gap-2.5">
         <button
-          onClick={readArea}
-          disabled={ocrState === "loading" || showResults || media === "none"}
-          className="flex-1 rounded-[14px] bg-[var(--ink)] py-3.5 text-[15px] font-bold text-white transition active:scale-[0.975] disabled:opacity-40"
+          onClick={showResults || locked ? retake : scanText}
+          disabled={ocrState === "loading" || (!locked && media === "none")}
+          className="flex-[3] rounded-[14px] bg-[var(--jade)] py-3.5 text-[16px] font-bold text-white transition active:scale-[0.975] disabled:opacity-40"
         >
-          {ocrState === "loading" ? "Reading…" : "Read this area"}
+          {ocrState === "loading"
+            ? "Reading…"
+            : showResults || locked
+              ? "Retake"
+              : "Scan text"}
         </button>
         <button
-          onClick={() => setAskUpload(true)}
+          onClick={openUpload}
           disabled={ocrState === "loading"}
-          className="flex-1 rounded-[14px] border border-[var(--line)] bg-white py-3.5 text-[15px] font-bold text-[var(--ink)] transition active:scale-[0.975] disabled:opacity-40"
+          className="flex-1 rounded-[14px] bg-[var(--gochu)] py-3.5 text-[13px] font-bold text-white transition active:scale-[0.975] disabled:opacity-40"
         >
-          Upload photo
+          Upload
         </button>
       </div>
 
@@ -260,9 +335,9 @@ export default function ScanView({
           <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center text-[12.5px] leading-relaxed text-[var(--ink2)]">
             <span className="text-3xl opacity-35">⌗</span>
             <span>
-              Point the box at a menu sign
+              Aim the box at a menu sign
               <br />
-              and tap <b>Read this area</b>
+              and tap <b>Scan text</b>
             </span>
           </div>
         ) : detected.length === 0 ? (
@@ -327,15 +402,15 @@ export default function ScanView({
         aria-hidden="true"
       />
 
-      {/* upload-permission dialog (mockup modal) */}
+      {/* upload-permission dialog — shown only the first time */}
       {askUpload && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/40 px-8">
           <div className="flex w-full max-w-[320px] flex-col gap-3 rounded-[20px] bg-white p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
             <div className="text-3xl">📷</div>
             <h3 className="text-[17px] font-black">Photo access</h3>
             <p className="text-[12.5px] leading-relaxed text-[var(--ink2)]">
-              Allow Jangbogi to open one photo from your device. We only read the menu text — the
-              image never leaves your phone except to recognize the menu.
+              Allow Jangbogi to open photos from your device. We only read the menu text — the image
+              never leaves your phone except to recognize the menu.
             </p>
             <div className="mt-1 flex gap-2.5">
               <button
@@ -346,6 +421,7 @@ export default function ScanView({
               </button>
               <button
                 onClick={() => {
+                  writeConsent(UPLOAD_OK_KEY);
                   setAskUpload(false);
                   fileRef.current?.click();
                 }}
