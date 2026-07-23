@@ -17,46 +17,50 @@ export default function OrdersPanel({
   const extra = history.length - shown.length;
 
   return (
-    <div className="flex h-full flex-col bg-white text-neutral-900">
-      <AppHeader name={profile.name} subtitle="Recently scanned" />
+    <div className="flex h-full flex-col bg-[var(--bg)] text-[var(--ink)]">
+      <AppHeader
+        name={profile.name}
+        spice={profile.spiceTolerance}
+        allergyCount={profile.allergies.length}
+      />
 
-      <div className="flex-1 overflow-hidden px-4 pt-3">
-        <p className="text-[11px] font-semibold tracking-widest text-neutral-500">SCAN TIMELINE</p>
+      <div className="flex-1 overflow-hidden px-[18px] pt-4">
+        <div className="mb-2 text-[22px] font-black tracking-[-0.02em]">History</div>
+        <p className="text-xs text-[var(--ink2)]">Only what you tapped is saved</p>
 
         {history.length === 0 ? (
-          <div className="mt-10 text-center">
-            <p className="text-4xl">🧾</p>
-            <p className="mt-3 text-sm font-medium text-neutral-700">No items yet</p>
-            <p className="mt-1 text-xs text-neutral-400">
-              Scan a menu and tap a dish — it will show up here.
+          <div className="mt-14 flex flex-col items-center gap-1.5 text-center">
+            <p className="text-3xl opacity-35">◷</p>
+            <p className="text-[12.5px] leading-relaxed text-[var(--ink2)]">
+              Tap a scanned dish and
+              <br />
+              it will be saved here with the time
             </p>
           </div>
         ) : (
-          <ul className="mt-2 space-y-1.5">
+          <ul className="mt-3 space-y-2">
             {shown.map((h) => (
-              <li
-                key={h.menuId}
-                className="flex items-center gap-3 rounded-xl bg-neutral-50 px-3 py-2"
-              >
-                <span className="text-2xl" aria-hidden>
-                  {h.emoji}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-semibold">{h.hangul}</span>
-                  <span className="block truncate text-xs italic text-emerald-700">{h.roman}</span>
-                </span>
-                <span className="shrink-0 text-[11px] text-neutral-400">{timeAgo(h.timestamp)}</span>
+              <li key={`${h.menuId}-${h.timestamp}`}>
                 <button
                   onClick={() => speak(h.hangul)}
                   aria-label={`Play pronunciation: ${h.hangul}`}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 active:scale-90"
+                  className="flex w-full items-center gap-3 rounded-[14px] border border-[var(--line)] bg-white px-3.5 py-3 text-left active:scale-[0.99]"
                 >
-                  🔊
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--jade)]" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-bold">{h.hangul}</span>
+                    <span className="block truncate text-[11.5px] text-[var(--ink2)]">
+                      {h.roman}
+                    </span>
+                  </span>
+                  <span className="mono shrink-0 text-[10.5px] text-[var(--ink2)]">
+                    {timeAgo(h.timestamp)}
+                  </span>
                 </button>
               </li>
             ))}
             {extra > 0 && (
-              <li className="pt-1 text-center text-[11px] text-neutral-400">
+              <li className="pt-1 text-center text-[11px] text-[var(--ink2)]">
                 + {extra} earlier item{extra > 1 ? "s" : ""}
               </li>
             )}

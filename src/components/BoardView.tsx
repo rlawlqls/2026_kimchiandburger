@@ -71,7 +71,7 @@ export default function BoardView({ image, detected, rawTokens, engine, onSelect
             )}
             <button
               onClick={onRescan}
-              className="mt-4 rounded-full bg-emerald-500 px-5 py-2 text-xs font-semibold text-white active:scale-95"
+              className="mt-4 rounded-full bg-[var(--jade)] px-5 py-2 text-xs font-semibold text-white active:scale-95"
             >
               Scan again
             </button>

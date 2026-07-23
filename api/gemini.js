@@ -3,7 +3,7 @@
 // reaches the client bundle. Returns 503 (not an error) when unset, so the client
 // can fall back to its static suggestion set.
 
-const MODEL = "gemini-1.5-flash";
+const MODEL = "gemma-4-26b-a4b-it";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

@@ -5,6 +5,7 @@ import { buildOrderPhrase, clampQty, MAX_QTY, MIN_QTY } from "../utils/orderPhra
 import { suggestPhrases, type SuggestedPhrase } from "../utils/gemini";
 
 const SPICY_LABEL = ["Not spicy", "Mild", "Medium", "Spicy", "Very spicy"] as const;
+const MAX_SPICE = 4;
 
 export default function DetailView({
   item,
@@ -25,6 +26,7 @@ export default function DetailView({
   // Allergens the user flagged that this dish contains.
   const flagged = menu.allergens.filter((a) => profile.allergies.includes(a));
   const tooSpicy = menu.spicy > profile.spiceTolerance;
+  const spiceDiff = menu.spicy - profile.spiceTolerance;
 
   // Gemini vendor-question suggestions (fetched once per dish; falls back offline).
   const [suggestions, setSuggestions] = useState<SuggestedPhrase[]>([]);
@@ -57,24 +59,24 @@ export default function DetailView({
   }, [menu.id, profile.spiceTolerance, profile.allergies.join(",")]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-white text-neutral-900">
+    <div className="flex h-full flex-col overflow-hidden bg-[var(--bg)] text-[var(--ink)]">
       {/* Back bar */}
-      <div className="z-20 flex shrink-0 items-center gap-2 border-b border-neutral-200 bg-white px-4 pb-2 pt-9">
+      <div className="z-20 flex shrink-0 items-center gap-2 border-b border-[var(--line)] bg-white/90 px-4 pb-2.5 pt-9 backdrop-blur">
         <button
           onClick={onBack}
-          className="rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 active:scale-95"
+          className="rounded-full bg-[var(--bg2)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] active:scale-95"
         >
           ← Menu
         </button>
-        <span className="ml-auto text-[11px] font-semibold tracking-widest text-emerald-600">
+        <span className="ml-auto text-[11px] font-bold tracking-[0.1em] text-[var(--jade)]">
           HOW TO ORDER
         </span>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 px-4 pt-3">
-        {/* Header: photo + name */}
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-[18px] pb-5 pt-4">
+        {/* Header: thumbnail + name */}
         <div className="flex items-center gap-3">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-orange-100">
+          <div className="flex h-[72px] w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[var(--bg2)]">
             {menu.image ? (
               <img src={menu.image} alt={menu.meaning} className="h-full w-full object-cover" />
             ) : (
@@ -83,42 +85,118 @@ export default function DetailView({
               </span>
             )}
           </div>
-          <div className="min-w-0">
-            <h1 className="truncate text-2xl font-bold leading-tight">{menu.hangul}</h1>
-            <div className="flex items-center gap-1.5">
-              <p className="truncate text-sm italic text-emerald-700">{menu.roman}</p>
-              <button
-                onClick={() => speak(menu.hangul)}
-                disabled={!voiceOk}
-                aria-label={`Play pronunciation: ${menu.hangul}`}
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs text-emerald-700 active:scale-90 disabled:opacity-40"
-              >
-                🔊
-              </button>
-            </div>
-            <p className="truncate text-xs text-neutral-500">{menu.meaning}</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[21px] font-black leading-[1.15] tracking-[-0.02em]">
+              {menu.meaning}
+            </h1>
+            <p className="mt-[3px] truncate text-[11.5px] text-[var(--ink2)]">
+              {menu.hangul} · {menu.roman}
+            </p>
+            <p className="mono mt-[5px] text-[15px] font-semibold">{price}</p>
           </div>
+          <button
+            onClick={() => speak(menu.hangul)}
+            disabled={!voiceOk}
+            aria-label={`Play pronunciation: ${menu.hangul}`}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--jade)]/10 text-sm text-[var(--jade-d)] active:scale-90 disabled:opacity-40"
+          >
+            🔊
+          </button>
         </div>
 
-        {/* Tags: spice · price */}
-        <div className="flex flex-wrap gap-1.5 text-xs">
-          <Tag>
-            {menu.spicy > 0 ? "🌶️".repeat(menu.spicy) : "🙂"} {SPICY_LABEL[menu.spicy]}
-          </Tag>
-          <Tag>💰 {price}</Tag>
+        {/* Alert banner — allergens first, then spice, else safe */}
+        {flagged.length > 0 ? (
+          <Alert tone="danger" icon="🚫" title={`Contains your allergen — ${flagged.join(", ")}`}>
+            See the red ingredients below. Confirm with the vendor before ordering.
+          </Alert>
+        ) : menu.spicy > 0 && spiceDiff >= 2 ? (
+          <Alert tone="hot" icon="🌶️" title={`Much spicier than your limit (${profile.spiceTolerance})`}>
+            Say “덜 맵게 해주세요” (deol maep-ge hae-ju-se-yo) — “less spicy, please”.
+          </Alert>
+        ) : menu.spicy > 0 && spiceDiff === 1 ? (
+          <Alert tone="hot" icon="🌶️" title="Slightly spicy for you">
+            Your limit {profile.spiceTolerance} · this dish {menu.spicy} out of {MAX_SPICE}
+          </Alert>
+        ) : (
+          <Alert tone="safe" icon="✓" title="Safe for you">
+            No allergen match{menu.spicy === 0 ? " · not spicy" : " · within your spice limit"}
+          </Alert>
+        )}
+
+        {/* Quantity stepper */}
+        <div className="flex items-center justify-center gap-[22px] py-0.5">
+          <StepBtn label="Decrease quantity" onClick={() => setQty((q) => clampQty(q - 1))} disabled={qty <= MIN_QTY}>
+            −
+          </StepBtn>
+          <span className="mono min-w-[56px] text-center text-[34px] font-black tabular-nums">
+            {qty}
+          </span>
+          <StepBtn label="Increase quantity" onClick={() => setQty((q) => clampQty(q + 1))} disabled={qty >= MAX_QTY}>
+            +
+          </StepBtn>
+        </div>
+
+        {/* Say-this box */}
+        <div className="relative rounded-[18px] bg-[var(--ink)] px-4 pb-[15px] pt-4 text-white">
+          <p className="mb-2 text-[10.5px] font-bold tracking-[0.1em] text-white/55">
+            SAY THIS AT THE STALL
+          </p>
+          <p className="pr-14 text-[26px] font-black leading-[1.25] tracking-[-0.02em]">
+            {orderPhrase.ko}
+          </p>
+          <p className="mono mt-2 pr-14 text-[13px] text-emerald-300">{orderPhrase.roman}</p>
+          <p className="mt-1.5 pr-14 text-[11.5px] text-white/55">{orderPhrase.en}</p>
+          <button
+            onClick={() => speak(orderPhrase.ko)}
+            disabled={!voiceOk}
+            aria-label={`Play: ${orderPhrase.ko}`}
+            className="absolute right-4 top-1/2 flex h-[46px] w-[46px] -translate-y-1/2 items-center justify-center rounded-full bg-[var(--jade)] text-lg text-white shadow-[0_4px_14px_rgba(16,185,129,0.4)] active:scale-95 disabled:opacity-40"
+          >
+            🔊
+          </button>
+        </div>
+
+        {/* Story / description */}
+        {menu.story && (
+          <p className="text-[12.5px] leading-[1.6] text-[var(--ink2)]">{menu.story}</p>
+        )}
+
+        {/* Spice meter */}
+        <div>
+          <div className="flex items-baseline justify-between text-[11.5px] text-[var(--ink2)]">
+            <span>Spice level</span>
+            <b className="text-[12.5px] text-[var(--ink)]">
+              {menu.spicy} / {MAX_SPICE} · {SPICY_LABEL[menu.spicy]} · your limit {profile.spiceTolerance}
+            </b>
+          </div>
+          <div className="relative mt-1.5 h-2 overflow-visible rounded-[5px] bg-[var(--bg2)]">
+            <i
+              className="block h-full rounded-[5px] bg-[var(--gochu)]"
+              style={{ width: `${(menu.spicy / MAX_SPICE) * 100}%` }}
+            />
+            <u
+              className="absolute -top-[3px] h-[14px] w-0.5 bg-[var(--ink)] opacity-55"
+              style={{ left: `${(profile.spiceTolerance / MAX_SPICE) * 100}%` }}
+            />
+          </div>
         </div>
 
         {/* Ingredients */}
         <div>
-          <p className="text-[10px] font-semibold tracking-widest text-neutral-400">INGREDIENTS</p>
-          <div className="mt-1 flex flex-wrap gap-1">
+          <div className="mb-1.5 flex items-baseline justify-between text-[11.5px] text-[var(--ink2)]">
+            <span>Ingredients</span>
+            {flagged.length > 0 && (
+              <b className="text-[var(--gochu)]">red = your allergen</b>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
             {menu.ingredients.map((ing) => {
               const isAllergen = flagged.some((a) => ing.toLowerCase().includes(a));
               return (
                 <span
                   key={ing}
-                  className={`rounded-md px-1.5 py-0.5 text-[11px] ${
-                    isAllergen ? "bg-red-100 text-red-700" : "bg-neutral-100 text-neutral-600"
+                  className={`rounded-[9px] px-2.5 py-[5px] text-[11.5px] font-semibold ${
+                    isAllergen ? "bg-[var(--gochu)] text-white" : "bg-[var(--bg2)] text-[var(--ink)]"
                   }`}
                 >
                   {ing}
@@ -128,87 +206,63 @@ export default function DetailView({
           </div>
         </div>
 
-        {/* Personalized warnings */}
-        {(flagged.length > 0 || tooSpicy) && (
-          <div className="space-y-1">
-            {flagged.length > 0 && (
-              <p className="rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] font-medium text-red-700">
-                ⚠️ Contains {flagged.join(", ")} — you flagged {flagged.length > 1 ? "these" : "this"}.
-              </p>
-            )}
-            {tooSpicy && (
-              <p className="rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] font-medium text-amber-700">
-                🌶️ Spicier than your preference — try “덜 맵게 해 주세요” (less spicy).
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Order card with quantity stepper */}
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold tracking-widest text-emerald-700">
-              QUANTITY
-            </span>
-            <div className="flex items-center gap-3">
-              <StepBtn label="Decrease quantity" onClick={() => setQty((q) => clampQty(q - 1))} disabled={qty <= MIN_QTY}>
-                −
-              </StepBtn>
-              <span className="w-5 text-center text-lg font-bold tabular-nums">{qty}</span>
-              <StepBtn label="Increase quantity" onClick={() => setQty((q) => clampQty(q + 1))} disabled={qty >= MAX_QTY}>
-                +
-              </StepBtn>
-            </div>
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-white p-2.5">
-            <div className="min-w-0">
-              <p className="text-base font-bold">{orderPhrase.ko}</p>
-              <p className="truncate text-xs italic text-emerald-700">{orderPhrase.roman}</p>
-              <p className="truncate text-xs text-neutral-500">{orderPhrase.en}</p>
-            </div>
-            <button
-              onClick={() => speak(orderPhrase.ko)}
-              disabled={!voiceOk}
-              aria-label={`Play: ${orderPhrase.ko}`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg text-emerald-700 active:scale-90 disabled:opacity-40"
-            >
-              🔊
-            </button>
-          </div>
-        </div>
-
         {/* Ask-the-vendor suggestions */}
         <div className="min-h-0">
-          <div className="flex items-center gap-2">
-            <p className="text-[10px] font-semibold tracking-widest text-neutral-400">
-              💬 ASK THE VENDOR
-            </p>
+          <div className="mb-1.5 flex items-center gap-2 text-[11.5px] text-[var(--ink2)]">
+            <span>💬 Ask the vendor</span>
             {aiBadge && (
               <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-semibold text-violet-600">
                 AI
               </span>
             )}
           </div>
-          <div className="mt-1 space-y-1">
+          <div className="space-y-1.5">
             {suggestions.length === 0 ? (
-              <p className="text-[11px] text-neutral-400">Loading suggestions…</p>
+              <p className="text-[11.5px] text-[var(--ink2)]">Loading suggestions…</p>
             ) : (
               suggestions.map((s) => (
                 <button
                   key={s.ko}
                   onClick={() => speak(s.ko)}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg bg-neutral-50 px-2.5 py-1.5 text-left active:scale-[0.99]"
+                  className="flex w-full items-center justify-between gap-2 rounded-[13px] border border-[var(--line)] bg-white px-3 py-2.5 text-left active:scale-[0.99]"
                 >
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">{s.ko}</span>
-                    <span className="block truncate text-[11px] text-neutral-500">{s.en}</span>
+                    <span className="block truncate text-[15px] font-bold">{s.ko}</span>
+                    <span className="block truncate text-[11px] text-[var(--ink2)]">{s.en}</span>
                   </span>
-                  <span className="shrink-0 text-emerald-600">🔊</span>
+                  <span className="shrink-0 text-[var(--jade-d)]">🔊</span>
                 </button>
               ))
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function Alert({
+  tone,
+  icon,
+  title,
+  children,
+}: {
+  tone: "danger" | "hot" | "safe";
+  icon: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const tones = {
+    danger: "bg-[var(--gochu-bg)] border-red-200 text-red-700",
+    hot: "bg-[var(--amber-bg)] border-amber-200 text-amber-700",
+    safe: "bg-emerald-50 border-emerald-200 text-emerald-700",
+  } as const;
+  return (
+    <div className={`flex items-start gap-2.5 rounded-[14px] border p-3.5 ${tones[tone]}`}>
+      <div className="shrink-0 text-[19px] leading-tight">{icon}</div>
+      <div>
+        <div className="text-[13.5px] font-bold leading-snug">{title}</div>
+        <div className="mt-[3px] text-[12px] leading-relaxed opacity-85">{children}</div>
       </div>
     </div>
   );
@@ -230,17 +284,9 @@ function StepBtn({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xl font-bold text-emerald-700 shadow-sm active:scale-90 disabled:opacity-30"
+      className="flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[var(--bg2)] text-[23px] font-semibold text-[var(--ink)] active:bg-[var(--line)] disabled:opacity-30"
     >
       {children}
     </button>
-  );
-}
-
-function Tag({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium text-neutral-700">
-      {children}
-    </span>
   );
 }

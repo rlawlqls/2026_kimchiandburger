@@ -14,7 +14,7 @@ export default function TabBar({
   onChange: (tab: Tab) => void;
 }) {
   return (
-    <nav className="z-30 flex shrink-0 items-stretch border-t border-neutral-200 bg-white pb-2 pt-1">
+    <nav className="z-30 flex h-[72px] shrink-0 items-stretch border-t border-[var(--line)] bg-white/95 pb-2.5 backdrop-blur">
       {TABS.map((t) => {
         const on = t.id === active;
         return (
@@ -22,11 +22,11 @@ export default function TabBar({
             key={t.id}
             onClick={() => onChange(t.id)}
             aria-current={on ? "page" : undefined}
-            className={`flex flex-1 flex-col items-center gap-0.5 py-1.5 text-[10px] font-medium transition-colors ${
-              on ? "text-emerald-600" : "text-neutral-400"
+            className={`flex flex-1 flex-col items-center justify-center gap-1 text-[10.5px] transition-colors ${
+              on ? "font-bold text-[var(--jade)]" : "font-medium text-[var(--ink2)]"
             }`}
           >
-            <span className={`text-lg ${on ? "" : "opacity-70"}`}>{t.icon}</span>
+            <span className={`text-[19px] leading-none ${on ? "" : "opacity-70"}`}>{t.icon}</span>
             {t.label}
           </button>
         );

@@ -72,10 +72,10 @@ export default function App() {
   );
 
   return (
-    <main className="min-h-dvh bg-neutral-100 sm:flex sm:items-center sm:justify-center sm:p-8">
+    <main className="min-h-dvh bg-[#e9eaee] sm:flex sm:items-center sm:justify-center sm:p-8">
       {/* Full-screen on phones; framed device preview on larger screens */}
-      <div className="relative h-dvh w-full overflow-hidden bg-black sm:h-[812px] sm:max-w-[400px] sm:rounded-[3rem] sm:border-[10px] sm:border-neutral-900 sm:shadow-2xl">
-        <div className="flex h-full w-full flex-col overflow-hidden bg-black text-white">
+      <div className="relative h-dvh w-full overflow-hidden bg-[#1c1c1e] sm:h-[812px] sm:max-w-[400px] sm:rounded-[44px] sm:border-[9px] sm:border-[#1c1c1e] sm:shadow-[0_30px_70px_rgba(0,0,0,0.28)]">
+        <div className="flex h-full w-full flex-col overflow-hidden bg-[var(--bg)] text-[var(--ink)] sm:rounded-[36px]">
           {/* Active panel — fills all space above the tab bar, never scrolls */}
           <div className="relative min-h-0 flex-1 overflow-hidden">
             {tab === "scan" && (

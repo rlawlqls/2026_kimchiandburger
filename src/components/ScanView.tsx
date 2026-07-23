@@ -158,8 +158,8 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
 
       {/* Top bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-5 pt-10 text-xs font-medium text-white/90">
-        <span className="tracking-widest">장보기 JANGBOGI</span>
-        <span className="rounded-full bg-black/40 px-2 py-1 backdrop-blur-sm">KO → EN</span>
+        <span className="font-black tracking-widest">장보기 JANGBOGI</span>
+        <span className="rounded-full bg-black/40 px-2.5 py-1 backdrop-blur-sm">KO → EN</span>
       </div>
 
       {/* Reticle — this box IS the OCR capture region (§ crop to bounding box) */}
@@ -196,7 +196,7 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
           </button>
           <button
             onClick={handleSample}
-            className="rounded-full bg-emerald-500/90 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm active:scale-95"
+            className="rounded-full bg-[var(--jade)] px-4 py-2 text-xs font-semibold text-white shadow-[0_4px_14px_rgba(16,185,129,0.4)] backdrop-blur-sm active:scale-95"
           >
             ✨ Try a sample
           </button>
@@ -214,7 +214,7 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
       {/* Explicit upload-permission dialog */}
       {askUpload && (
         <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 px-6">
-          <div className="w-full max-w-[300px] rounded-2xl bg-white p-5 text-center text-neutral-900">
+          <div className="w-full max-w-[300px] rounded-[20px] bg-white p-5 text-center text-[var(--ink)]">
             <p className="text-2xl">🖼️</p>
             <p className="mt-2 text-base font-semibold">Access a photo?</p>
             <p className="mt-1 text-xs leading-relaxed text-neutral-500">
@@ -230,7 +230,7 @@ export default function ScanView({ ocrState, onImage, onRetry }: Props) {
               </button>
               <button
                 onClick={confirmUpload}
-                className="flex-1 rounded-full bg-emerald-500 py-2.5 text-sm font-semibold text-white active:scale-95"
+                className="flex-1 rounded-full bg-[var(--jade)] py-2.5 text-sm font-semibold text-white active:scale-95"
               >
                 Allow
               </button>
