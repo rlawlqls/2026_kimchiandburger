@@ -12,7 +12,7 @@ export async function runOcr(
   imageHeight: number,
 ): Promise<OcrResult> {
   try {
-    const tokens = await visionOcr(imageBase64);
+    const tokens = await visionOcr(imageBase64, imageWidth, imageHeight);
     return { tokens, engine: "vision", imageWidth, imageHeight };
   } catch (err) {
     console.warn("Vision OCR unavailable, falling back to Tesseract:", err);
@@ -21,14 +21,19 @@ export async function runOcr(
   }
 }
 
-async function visionOcr(imageBase64: string): Promise<OcrToken[]> {
+async function visionOcr(
+  imageBase64: string,
+  imageWidth: number,
+  imageHeight: number,
+): Promise<OcrToken[]> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 12000);
+  // Gemma vision can take a while (it "thinks" before answering); fall back after 30s.
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
     const res = await fetch("/api/ocr", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: imageBase64 }),
+      body: JSON.stringify({ image: imageBase64, width: imageWidth, height: imageHeight }),
       signal: controller.signal,
     });
     if (!res.ok) throw new Error(`/api/ocr responded ${res.status}`);

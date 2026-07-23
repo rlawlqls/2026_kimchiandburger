@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import type { DetectedItem, UserProfile } from "../types";
+import { useMemo, useState } from "react";
+import type { DetectedItem, MenuItem, UserProfile } from "../types";
 import { hasKoreanVoice, speak } from "../utils/speak";
 import { buildOrderPhrase, clampQty, MAX_QTY, MIN_QTY } from "../utils/orderPhrase";
-import { suggestPhrases, type SuggestedPhrase } from "../utils/gemini";
+import { artFor } from "../data/foodArt";
 
 const SPICY_LABEL = ["Not spicy", "Mild", "Medium", "Spicy", "Very spicy"] as const;
 const MAX_SPICE = 4;
@@ -10,101 +10,58 @@ const MAX_SPICE = 4;
 export default function DetailView({
   item,
   profile,
-  onBack,
+  onSaveOrder,
+  onListen,
 }: {
   item: DetectedItem;
   profile: UserProfile;
-  onBack: () => void;
+  onSaveOrder: (menu: MenuItem, qty: number) => void;
+  onListen: (menu: MenuItem, qty: number) => void;
 }) {
   const { menu } = item;
   const price = item.ocrPrice ?? menu.priceTypical;
   const voiceOk = hasKoreanVoice();
+  const art = artFor(menu.id);
 
   const [qty, setQty] = useState(1);
   const orderPhrase = useMemo(() => buildOrderPhrase(menu, qty), [menu, qty]);
 
   // Allergens the user flagged that this dish contains.
   const flagged = menu.allergens.filter((a) => profile.allergies.includes(a));
-  const tooSpicy = menu.spicy > profile.spiceTolerance;
   const spiceDiff = menu.spicy - profile.spiceTolerance;
 
-  // Gemini vendor-question suggestions (fetched once per dish; falls back offline).
-  const [suggestions, setSuggestions] = useState<SuggestedPhrase[]>([]);
-  const [aiBadge, setAiBadge] = useState(false);
-
-  useEffect(() => {
-    let live = true;
-    setSuggestions([]);
-    suggestPhrases({
-      dish: {
-        hangul: menu.hangul,
-        roman: menu.roman,
-        meaning: menu.meaning,
-        spicy: menu.spicy,
-        allergens: menu.allergens,
-      },
-      qty,
-      spiceTolerance: profile.spiceTolerance,
-      allergies: profile.allergies,
-    }).then((res) => {
-      if (!live) return;
-      setSuggestions(res.phrases.slice(0, 3));
-      setAiBadge(res.ai);
-    });
-    return () => {
-      live = false;
-    };
-    // Refetch when the dish or profile changes — not on every qty tick.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [menu.id, profile.spiceTolerance, profile.allergies.join(",")]);
-
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-[var(--bg)] text-[var(--ink)]">
-      {/* Back bar */}
-      <div className="z-20 flex shrink-0 items-center gap-2 border-b border-[var(--line)] bg-white/90 px-4 pb-2.5 pt-9 backdrop-blur">
-        <button
-          onClick={onBack}
-          className="rounded-full bg-[var(--bg2)] px-3 py-1.5 text-sm font-medium text-[var(--ink)] active:scale-95"
-        >
-          ← Menu
-        </button>
-        <span className="ml-auto text-[11px] font-bold tracking-[0.1em] text-[var(--jade)]">
-          HOW TO ORDER
-        </span>
+    <>
+      {/* Header: thumbnail + name */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-[72px] w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[var(--bg2)]">
+          {menu.image ? (
+            <img src={menu.image} alt={menu.meaning} className="h-full w-full object-cover" />
+          ) : art ? (
+            <svg
+              viewBox="0 0 100 70"
+              preserveAspectRatio="xMidYMid meet"
+              className="h-full w-full"
+              dangerouslySetInnerHTML={{ __html: art }}
+            />
+          ) : (
+            <span className="text-4xl" role="img" aria-label={menu.meaning}>
+              {menu.emoji}
+            </span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-[21px] font-black leading-[1.15] tracking-[-0.02em]">
+            {menu.meaning}
+          </h1>
+          <p className="mt-[3px] truncate text-[11.5px] text-[var(--ink2)]">
+            {menu.hangul} · {menu.roman}
+          </p>
+          <p className="mono mt-[5px] text-[15px] font-semibold">{price}</p>
+        </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-[18px] pb-5 pt-4">
-        {/* Header: thumbnail + name */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-[72px] w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[var(--bg2)]">
-            {menu.image ? (
-              <img src={menu.image} alt={menu.meaning} className="h-full w-full object-cover" />
-            ) : (
-              <span className="text-4xl" role="img" aria-label={menu.meaning}>
-                {menu.emoji}
-              </span>
-            )}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-[21px] font-black leading-[1.15] tracking-[-0.02em]">
-              {menu.meaning}
-            </h1>
-            <p className="mt-[3px] truncate text-[11.5px] text-[var(--ink2)]">
-              {menu.hangul} · {menu.roman}
-            </p>
-            <p className="mono mt-[5px] text-[15px] font-semibold">{price}</p>
-          </div>
-          <button
-            onClick={() => speak(menu.hangul)}
-            disabled={!voiceOk}
-            aria-label={`Play pronunciation: ${menu.hangul}`}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--jade)]/10 text-sm text-[var(--jade-d)] active:scale-90 disabled:opacity-40"
-          >
-            🔊
-          </button>
-        </div>
-
-        {/* Alert banner — allergens first, then spice, else safe */}
+      {/* Alert banner — allergens first, then spice, else safe */}
         {flagged.length > 0 ? (
           <Alert tone="danger" icon="🚫" title={`Contains your allergen — ${flagged.join(", ")}`}>
             See the red ingredients below. Confirm with the vendor before ordering.
@@ -206,38 +163,22 @@ export default function DetailView({
           </div>
         </div>
 
-        {/* Ask-the-vendor suggestions */}
-        <div className="min-h-0">
-          <div className="mb-1.5 flex items-center gap-2 text-[11.5px] text-[var(--ink2)]">
-            <span>💬 Ask the vendor</span>
-            {aiBadge && (
-              <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[9px] font-semibold text-violet-600">
-                AI
-              </span>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            {suggestions.length === 0 ? (
-              <p className="text-[11.5px] text-[var(--ink2)]">Loading suggestions…</p>
-            ) : (
-              suggestions.map((s) => (
-                <button
-                  key={s.ko}
-                  onClick={() => speak(s.ko)}
-                  className="flex w-full items-center justify-between gap-2 rounded-[13px] border border-[var(--line)] bg-white px-3 py-2.5 text-left active:scale-[0.99]"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-[15px] font-bold">{s.ko}</span>
-                    <span className="block truncate text-[11px] text-[var(--ink2)]">{s.en}</span>
-                  </span>
-                  <span className="shrink-0 text-[var(--jade-d)]">🔊</span>
-                </button>
-              ))
-            )}
-          </div>
+        {/* Actions — save the order, or open the live "listen to vendor" helper */}
+        <div className="flex gap-2.5 pt-0.5">
+          <button
+            onClick={() => onSaveOrder(menu, qty)}
+            className="flex-1 rounded-[14px] bg-[var(--jade)] py-3.5 text-[15px] font-bold text-white transition active:scale-[0.975]"
+          >
+            Save this order
+          </button>
+          <button
+            onClick={() => onListen(menu, qty)}
+            className="flex-1 rounded-[14px] border border-[var(--line)] bg-white py-3.5 text-[15px] font-bold text-[var(--ink)] transition active:scale-[0.975]"
+          >
+            Listen to vendor
+          </button>
         </div>
-      </div>
-    </div>
+    </>
   );
 }
 

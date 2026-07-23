@@ -65,3 +65,12 @@ export function addHistoryEntry(
   }
   return next;
 }
+
+/** Wipe the timeline (mockup "Clear all"). */
+export function clearHistory(): void {
+  try {
+    localStorage.removeItem(HISTORY_KEY);
+  } catch {
+    // Ignore — storage disabled.
+  }
+}

@@ -7,7 +7,9 @@ const mk = (id: string, ts: number): ScanHistoryEntry => ({
   menuId: id,
   hangul: id,
   roman: id,
+  en: id,
   emoji: "🍢",
+  action: "Viewed",
   timestamp: ts,
 });
 

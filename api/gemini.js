@@ -44,7 +44,14 @@ export default async function handler(req, res) {
     }
 
     const data = await gRes.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "[]";
+    // Gemma 4 returns intermediate "thought" parts alongside the answer; keep only
+    // the real (non-thought) text parts.
+    const parts = data.candidates?.[0]?.content?.parts ?? [];
+    const text =
+      parts
+        .filter((p) => p && p.thought !== true && typeof p.text === "string")
+        .map((p) => p.text)
+        .join("") || "[]";
     const phrases = safeParsePhrases(text);
     res.status(200).json({ phrases });
   } catch (err) {
@@ -59,6 +66,8 @@ function buildPrompt(ctx) {
   const qty = typeof ctx.qty === "number" ? ctx.qty : 1;
 
   return [
+    // This Gemma model has no API thinking toggle, so suppress reasoning in-prompt.
+    "Output ONLY the JSON array. Do NOT think, plan, or explain — answer immediately.",
     "You are a Korean-language coach helping a foreign tourist talk to a vendor at a Korean traditional market (분식/street-food stall).",
     `The tourist is looking at this dish: ${dish.hangul ?? ""} (${dish.roman ?? ""}) — ${dish.meaning ?? ""}.`,
     `They want to order ${qty}. Their spice tolerance is ${spice}/4. They are avoiding these allergens: ${allergies.length ? allergies.join(", ") : "none"}.`,

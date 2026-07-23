@@ -46,12 +46,18 @@ export interface UserProfile {
   allergies: Allergen[];
 }
 
+/** What the user did with a dish — drives the timeline dot colour (mockup log). */
+export type HistoryAction = "Viewed" | "Ordered" | "Reply";
+
 /** One entry in the local timeline — written only when the user opens a detail. */
 export interface ScanHistoryEntry {
   menuId: string;
   hangul: string;
   roman: string;
+  /** English name shown as the timeline subtitle (mockup: `f.en · action`). */
+  en: string;
   emoji: string;
+  action: HistoryAction;
   timestamp: number; // Date.now() at the moment the detail panel opened
 }
 

@@ -9,3 +9,22 @@ export function timeAgo(timestamp: number, now: number = Date.now()): string {
   const days = Math.floor(hours / 24);
   return days === 1 ? "yesterday" : `${days} d ago`;
 }
+
+/**
+ * Two-line timeline stamp used by History (mockup `stamp()`):
+ * `{ day: "Today" | "7/23", time: "14:32" }`.
+ */
+export function historyStamp(
+  timestamp: number,
+  now: number = Date.now(),
+): { day: string; time: string } {
+  const d = new Date(timestamp);
+  const n = new Date(now);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const sameDay = d.toDateString() === n.toDateString();
+  return {
+    day: sameDay ? "Today" : `${d.getMonth() + 1}/${d.getDate()}`,
+    time: `${hh}:${mm}`,
+  };
+}

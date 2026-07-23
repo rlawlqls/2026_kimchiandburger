@@ -1,9 +1,11 @@
-export type Tab = "scan" | "orders" | "profile";
+export type Tab = "scan" | "orders" | "guide" | "profile";
 
+// Glyph icons match the golmokmal mockup nav.
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "scan", label: "Scan", icon: "📷" },
-  { id: "orders", label: "Orders", icon: "🧾" },
-  { id: "profile", label: "Profile", icon: "👤" },
+  { id: "scan", label: "Scan", icon: "⌗" },
+  { id: "orders", label: "History", icon: "◷" },
+  { id: "guide", label: "Guide", icon: "▤" },
+  { id: "profile", label: "Profile", icon: "☺" },
 ];
 
 export default function TabBar({
@@ -26,7 +28,7 @@ export default function TabBar({
               on ? "font-bold text-[var(--jade)]" : "font-medium text-[var(--ink2)]"
             }`}
           >
-            <span className={`text-[19px] leading-none ${on ? "" : "opacity-70"}`}>{t.icon}</span>
+            <span className="text-[19px] leading-none">{t.icon}</span>
             {t.label}
           </button>
         );

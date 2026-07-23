@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import type { ScanHistoryEntry, UserProfile } from "../types";
 import {
   addHistoryEntry,
+  clearHistory as clearHistoryStore,
   loadHistory,
   loadProfile,
   saveProfile,
@@ -27,5 +28,10 @@ export function useProfile() {
     setHistory((prev) => addHistoryEntry(prev, entry));
   }, []);
 
-  return { profile, updateProfile, history, recordScan };
+  const clearHistory = useCallback(() => {
+    clearHistoryStore();
+    setHistory([]);
+  }, []);
+
+  return { profile, updateProfile, history, recordScan, clearHistory };
 }

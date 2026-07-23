@@ -1,5 +1,4 @@
 import type { Allergen, SpiceLevel, UserProfile } from "../types";
-import AppHeader from "./AppHeader";
 
 const ALLERGENS: { id: Allergen; en: string; ko: string }[] = [
   { id: "gluten", en: "Gluten", ko: "밀/글루텐" },
@@ -27,14 +26,12 @@ export default function ProfilePanel({
 
   return (
     <div className="flex h-full flex-col bg-[var(--bg)] text-[var(--ink)]">
-      <AppHeader
-        name={profile.name}
-        spice={profile.spiceTolerance}
-        allergyCount={profile.allergies.length}
-      />
-
       <div className="flex-1 overflow-y-auto px-[18px] pb-5 pt-4">
-        <div className="mb-4 text-[22px] font-black tracking-[-0.02em]">Profile</div>
+        <div className="flex items-baseline justify-between">
+          <div className="text-[22px] font-black tracking-[-0.02em]">Profile</div>
+          <span className="text-xs text-[var(--ink2)]">Saved automatically</span>
+        </div>
+        <div className="mb-4" />
 
         {/* Name */}
         <label className="text-[11px] font-bold text-[var(--ink2)]">NAME</label>
