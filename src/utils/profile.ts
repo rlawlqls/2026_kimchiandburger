@@ -1,9 +1,9 @@
 import { LEGACY_ALLERGEN_IDS, isAllergen } from "../data/allergens";
 import type { Allergen, ScanHistoryEntry, UserProfile } from "../types";
+import { storageKey } from "./storage";
 
-// localStorage keys — namespaced so they never collide with other apps on the origin.
-const PROFILE_KEY = "jangbogi.profile";
-const HISTORY_KEY = "jangbogi.history";
+const PROFILE_KEY = storageKey("profile");
+const HISTORY_KEY = storageKey("history");
 const HISTORY_CAP = 30;
 
 export const DEFAULT_PROFILE: UserProfile = {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { DetectedItem, UserProfile } from "../types";
 import { cropFromMedia, type BoxPct } from "../utils/crop";
+import { storageKey } from "../utils/storage";
 
 interface Props {
   ocrState: "idle" | "loading" | "done" | "error";
@@ -23,7 +24,7 @@ const MIN_H = 0.14;
 const SAMPLE_URL = "/sample-menu.jpg";
 
 // Remember one-time permission consents so we don't re-prompt on every scan (§5-A).
-const UPLOAD_OK_KEY = "jangbogi.uploadConsent";
+const UPLOAD_OK_KEY = storageKey("uploadConsent");
 const readConsent = (key: string): boolean => {
   try {
     return localStorage.getItem(key) === "1";
