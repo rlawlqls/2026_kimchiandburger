@@ -7,7 +7,8 @@ export interface OcrToken {
 
 export interface OcrResult {
   tokens: OcrToken[];
-  engine: "vision" | "tesseract";
+  /** "gemma" = cloud OCR via /api/ocr; "tesseract" = client-side fallback. */
+  engine: "gemma" | "tesseract";
   imageWidth: number;
   imageHeight: number;
 }

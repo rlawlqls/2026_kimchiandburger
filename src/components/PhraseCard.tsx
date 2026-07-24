@@ -1,8 +1,9 @@
+import { useSyncExternalStore } from "react";
 import type { Phrase } from "../types";
-import { hasKoreanVoice, speak } from "../utils/speak";
+import { hasKoreanVoice, speak, subscribeVoices } from "../utils/speak";
 
 export default function PhraseCard({ phrase }: { phrase: Phrase }) {
-  const voiceOk = hasKoreanVoice();
+  const voiceOk = useSyncExternalStore(subscribeVoices, hasKoreanVoice, hasKoreanVoice);
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between gap-3">

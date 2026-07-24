@@ -3,13 +3,12 @@
 // reaches the client bundle. Returns 503 (not an error) when unset, so the client
 // can fall back to its static suggestion set.
 
+import { blockRequest } from "./_guard.js";
+
 const MODEL = "gemma-4-26b-a4b-it";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
+  if (blockRequest(req, res)) return;
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) {

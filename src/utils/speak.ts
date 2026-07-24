@@ -1,16 +1,38 @@
-let koreanVoiceChecked = false;
-let koreanVoiceAvailable = true;
+// null = the voice list hasn't loaded yet, so we don't know.
+let koreanVoiceAvailable: boolean | null = null;
+const listeners = new Set<() => void>();
 
-/** true when the device has a ko-KR voice (checked lazily — voices load async). */
-export function hasKoreanVoice(): boolean {
+function evaluate(): boolean | null {
   if (typeof speechSynthesis === "undefined") return false;
   const voices = speechSynthesis.getVoices();
-  if (voices.length > 0) {
-    koreanVoiceChecked = true;
-    koreanVoiceAvailable = voices.some((v) => v.lang?.toLowerCase().startsWith("ko"));
-  }
-  // Before the voice list loads, stay optimistic so 🔊 is not wrongly disabled.
-  return koreanVoiceChecked ? koreanVoiceAvailable : true;
+  if (voices.length === 0) return null; // still loading
+  return voices.some((v) => v.lang?.toLowerCase().startsWith("ko"));
+}
+
+// The voice list arrives asynchronously and keeps changing afterwards (Chrome's
+// remote voices, OS voice downloads). Without this listener the first empty
+// getVoices() reading was never revisited and 🔊 stayed disabled forever.
+if (typeof speechSynthesis !== "undefined") {
+  speechSynthesis.addEventListener?.("voiceschanged", () => {
+    const next = evaluate();
+    if (next === null || next === koreanVoiceAvailable) return;
+    koreanVoiceAvailable = next;
+    listeners.forEach((notify) => notify());
+  });
+}
+
+/** true when the device has a ko-KR voice. Optimistic until the list loads. */
+export function hasKoreanVoice(): boolean {
+  if (koreanVoiceAvailable === null) koreanVoiceAvailable = evaluate();
+  return koreanVoiceAvailable ?? true;
+}
+
+/** Subscribe to voice-availability changes — pair with `hasKoreanVoice` in a component. */
+export function subscribeVoices(onChange: () => void): () => void {
+  listeners.add(onChange);
+  return () => {
+    listeners.delete(onChange);
+  };
 }
 
 /**

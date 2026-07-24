@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import type { DetectedItem, MenuItem, UserProfile } from "../types";
-import { hasKoreanVoice, speak } from "../utils/speak";
+import { hasKoreanVoice, speak, subscribeVoices } from "../utils/speak";
 import { buildOrderPhrase, clampQty, MAX_QTY, MIN_QTY } from "../utils/orderPhrase";
 import { otherPhrases, type OtherPhrase } from "../utils/otherPhrases";
 import { artFor } from "../data/foodArt";
@@ -22,7 +22,8 @@ export default function DetailView({
 }) {
   const { menu } = item;
   const price = item.ocrPrice ?? menu.priceTypical;
-  const voiceOk = hasKoreanVoice();
+  // Re-renders once the voice list loads, so 🔊 un-disables itself (M6).
+  const voiceOk = useSyncExternalStore(subscribeVoices, hasKoreanVoice, hasKoreanVoice);
   const art = artFor(menu.id);
 
   const [qty, setQty] = useState(1);

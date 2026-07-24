@@ -164,23 +164,6 @@
   animation: dotBounce 1s ease-in-out infinite;
 }
 
-/* Highlight overlays fade in sequentially on BoardView entry (§5-B). */
-@keyframes highlightIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.highlight-in {
-  opacity: 0;
-  animation: highlightIn 0.4s ease-out forwards;
-}
-
 /* Listening mic — expanding ring pulse (mockup .mic.live). */
 @keyframes micPulse {
   0% {
@@ -199,10 +182,6 @@
   .animate-scan,
   .animate-dot,
   .animate-mic-pulse {
-    animation: none;
-  }
-  .highlight-in {
-    opacity: 1;
     animation: none;
   }
 }

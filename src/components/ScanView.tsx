@@ -14,8 +14,13 @@ interface Props {
 
 // Default crop box, matching the mockup (8% / 24% / 84% / 48%).
 const DEFAULT_BOX: BoxPct = { left: 0.08, top: 0.24, width: 0.84, height: 0.48 };
+// The sample is read whole, so its outline covers the finder.
+const FULL_BOX: BoxPct = { left: 0, top: 0, width: 1, height: 1 };
 const MIN_W = 0.18;
 const MIN_H = 0.14;
+
+// Bundled menu board so anyone (no camera, no photos) can run the real pipeline (§5-A).
+const SAMPLE_URL = "/sample-menu.jpg";
 
 // Remember one-time permission consents so we don't re-prompt on every scan (§5-A).
 const UPLOAD_OK_KEY = "jangbogi.uploadConsent";
@@ -207,8 +212,22 @@ export default function ScanView({
     setBox(DEFAULT_BOX);
   };
 
+  // Run the whole pipeline on the bundled sample board — the one path that works
+  // with no camera and no photo library (laptop judges, denied permissions).
+  const trySample = () => {
+    stopStream();
+    setFrozenUrl(null);
+    setPhotoUrl((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return SAMPLE_URL;
+    });
+    setMedia("photo");
+    setBox(FULL_BOX); // the sample is read whole, not through the crop box
+    onImage(SAMPLE_URL);
+  };
+
   const retake = () => {
-    if (photoUrl) URL.revokeObjectURL(photoUrl);
+    if (photoUrl?.startsWith("blob:")) URL.revokeObjectURL(photoUrl);
     setPhotoUrl(null);
     setFrozenUrl(null);
     setBox(DEFAULT_BOX);
@@ -258,6 +277,13 @@ export default function ScanView({
               <br />
               tap <b className="text-white">Upload</b> to read a menu
             </span>
+            <button
+              onClick={trySample}
+              disabled={ocrState === "loading"}
+              className="mt-2 rounded-full bg-white/15 px-4 py-2 text-[12px] font-bold text-white transition active:scale-[0.96] disabled:opacity-40"
+            >
+              Try a sample menu
+            </button>
           </div>
         )}
 
@@ -339,6 +365,13 @@ export default function ScanView({
               <br />
               and tap <b>Scan text</b>
             </span>
+            <button
+              onClick={trySample}
+              disabled={ocrState === "loading"}
+              className="mt-1 text-xs font-semibold text-[var(--blue)] disabled:opacity-40"
+            >
+              or try a sample menu
+            </button>
           </div>
         ) : detected.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-1.5 text-center text-[12.5px] leading-relaxed text-[var(--ink2)]">
@@ -409,7 +442,7 @@ export default function ScanView({
             <div className="text-3xl">📷</div>
             <h3 className="text-[17px] font-black">Photo access</h3>
             <p className="text-[12.5px] leading-relaxed text-[var(--ink2)]">
-              Allow Jangbogi to open photos from your device. We only read the menu text — the image
+              Allow Market Mate AI to open photos from your device. We only read the menu text — the image
               never leaves your phone except to recognize the menu.
             </p>
             <div className="mt-1 flex gap-2.5">

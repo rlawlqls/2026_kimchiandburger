@@ -2,8 +2,8 @@ import type { OcrResult, OcrToken } from "../types";
 
 /**
  * Single OCR interface with automatic failover (§3-2):
- *   1) Google Cloud Vision via the /api/ocr Vercel function (key stays server-side)
- *   2) Tesseract.js (kor) fully client-side — works offline / without an API key
+ *   1) Gemma vision via the /api/ocr Vercel function (key stays server-side)
+ *   2) Tesseract.js (kor) fully client-side — no API key needed
  * Both paths return the same shape: [{ text, bbox: [x, y, w, h] }] in pixels.
  */
 export async function runOcr(
@@ -12,16 +12,16 @@ export async function runOcr(
   imageHeight: number,
 ): Promise<OcrResult> {
   try {
-    const tokens = await visionOcr(imageBase64, imageWidth, imageHeight);
-    return { tokens, engine: "vision", imageWidth, imageHeight };
+    const tokens = await cloudOcr(imageBase64, imageWidth, imageHeight);
+    return { tokens, engine: "gemma", imageWidth, imageHeight };
   } catch (err) {
-    console.warn("Vision OCR unavailable, falling back to Tesseract:", err);
+    console.warn("Cloud OCR unavailable, falling back to Tesseract:", err);
     const tokens = await tesseractOcr(imageBase64);
     return { tokens, engine: "tesseract", imageWidth, imageHeight };
   }
 }
 
-async function visionOcr(
+async function cloudOcr(
   imageBase64: string,
   imageWidth: number,
   imageHeight: number,

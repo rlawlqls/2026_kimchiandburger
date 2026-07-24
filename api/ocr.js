@@ -4,6 +4,8 @@
 // the environment variable; it never reaches the client bundle. Returns 503 (not an
 // error) when unset, so the client falls back to browser-side Tesseract.
 
+import { blockRequest } from "./_guard.js";
+
 const MODEL = "gemma-4-26b-a4b-it";
 
 // Lean prompt: this model has no API-level thinking toggle (thinkingBudget is
@@ -19,10 +21,7 @@ const PROMPT = [
 ].join("\n");
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
+  if (blockRequest(req, res)) return;
 
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
