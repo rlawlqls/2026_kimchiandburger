@@ -1,3 +1,4 @@
+import { allergenInfo } from "../data/allergens";
 import type { Allergen, MenuItem, SpiceLevel } from "../types";
 
 export interface SuggestedPhrase {
@@ -74,10 +75,11 @@ export function fallbackPhrases(ctx: SuggestContext): SuggestedPhrase[] {
 
   const flagged = dish.allergens.filter((a) => allergies.includes(a));
   if (flagged.length > 0) {
+    const a = allergenInfo(flagged[0]);
     out.push({
-      ko: `${allergenKo(flagged[0])} 들어가요?`,
-      roman: `${allergenRoman(flagged[0])} deu-reo-ga-yo?`,
-      en: `Does it contain ${flagged[0]}?`,
+      ko: `${a.ko} 들어가요?`,
+      roman: `${a.roman} deu-reo-ga-yo?`,
+      en: `Does it contain ${a.word}?`,
       intent: "allergen",
     });
   }
@@ -99,28 +101,4 @@ export function fallbackPhrases(ctx: SuggestContext): SuggestedPhrase[] {
   }
 
   return out.slice(0, 6);
-}
-
-function allergenKo(a: Allergen): string {
-  const map: Record<Allergen, string> = {
-    gluten: "밀가루",
-    seafood: "해산물",
-    egg: "계란",
-    dairy: "유제품",
-    soy: "콩",
-    nuts: "견과류",
-  };
-  return map[a];
-}
-
-function allergenRoman(a: Allergen): string {
-  const map: Record<Allergen, string> = {
-    gluten: "mil-ga-ru",
-    seafood: "hae-san-mul",
-    egg: "gye-ran",
-    dairy: "yu-je-pum",
-    soy: "kong",
-    nuts: "gyeon-gwa-ryu",
-  };
-  return map[a];
 }

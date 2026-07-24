@@ -1,4 +1,5 @@
-import type { Allergen, MenuItem, Phrase, UserProfile } from "../types";
+import { allergenInfo } from "../data/allergens";
+import type { MenuItem, Phrase, UserProfile } from "../types";
 import { clampQty, koCount } from "./orderPhrase";
 
 /** Category shown on each card + the tint it uses. */
@@ -9,16 +10,6 @@ export interface OtherPhrase extends Phrase {
   tag: string;
   tone: PhraseTone;
 }
-
-/** Korean name / romanization / English word for each allergen we track. */
-const ALLERGEN_KO: Record<Allergen, { ko: string; roman: string; en: string }> = {
-  gluten: { ko: "밀", roman: "mil", en: "wheat" },
-  seafood: { ko: "해산물", roman: "hae-san-mul", en: "seafood" },
-  egg: { ko: "계란", roman: "gye-ran", en: "egg" },
-  dairy: { ko: "우유", roman: "u-yu", en: "dairy" },
-  soy: { ko: "콩", roman: "kong", en: "soy" },
-  nuts: { ko: "견과류", roman: "gyeon-gwa-ryu", en: "nuts" },
-};
 
 const TAG: Record<"allergy" | "spice" | "price" | "takeout" | "reorder", string> = {
   allergy: "ALLERGY · 알레르기",
@@ -40,20 +31,20 @@ export function otherPhrases(menu: MenuItem, profile: UserProfile, qty: number):
 
   // 1) Allergy — only when this dish contains one of the user's allergens.
   if (flagged.length > 0) {
-    const a = ALLERGEN_KO[flagged[0]];
+    const a = allergenInfo(flagged[0]);
     out.push({
       tag: TAG.allergy,
       tone: "allergy",
       ko: `여기 ${a.ko} 들어가요?`,
       roman: `yeo-gi ${a.roman} deu-reo-ga-yo?`,
-      en: `Does this contain ${a.en}?`,
+      en: `Does this contain ${a.word}?`,
     });
     out.push({
       tag: TAG.allergy,
       tone: "allergy",
       ko: `${a.ko} 빼고 주세요`,
       roman: `${a.roman} ppae-go ju-se-yo`,
-      en: `Without ${a.en}, please`,
+      en: `Without ${a.word}, please`,
     });
   }
 

@@ -1,13 +1,6 @@
+import { ALLERGENS, allergenEn } from "../data/allergens";
 import type { Allergen, SpiceLevel, UserProfile } from "../types";
 
-const ALLERGENS: { id: Allergen; en: string; ko: string }[] = [
-  { id: "gluten", en: "Gluten", ko: "밀/글루텐" },
-  { id: "seafood", en: "Seafood", ko: "해산물" },
-  { id: "egg", en: "Egg", ko: "계란" },
-  { id: "dairy", en: "Dairy", ko: "유제품" },
-  { id: "soy", en: "Soy", ko: "대두" },
-  { id: "nuts", en: "Nuts", ko: "견과류" },
-];
 const SPICE_LABELS = ["Not spicy", "Mild", "Medium", "Spicy", "Very spicy"] as const;
 
 export default function ProfilePanel({
@@ -35,13 +28,25 @@ export default function ProfilePanel({
 
         {/* Name */}
         <label className="text-[11px] font-bold text-[var(--ink2)]">NAME</label>
-        <input
-          type="text"
-          value={profile.name}
-          onChange={(e) => onChange({ name: e.target.value.slice(0, 24) })}
-          placeholder="Your name"
-          className="mt-1.5 w-full rounded-xl border border-[var(--line)] bg-white px-3.5 py-3 text-[15px] outline-none focus:border-[var(--ink)]"
-        />
+        <div className="relative mt-1.5">
+          <input
+            type="text"
+            value={profile.name}
+            onChange={(e) => onChange({ name: e.target.value.slice(0, 24) })}
+            placeholder="Your name"
+            className="w-full rounded-xl border border-[var(--line)] bg-white py-3 pl-3.5 pr-11 text-[15px] outline-none focus:border-[var(--ink)]"
+          />
+          {profile.name && (
+            <button
+              type="button"
+              onClick={() => onChange({ name: "" })}
+              aria-label="Clear name"
+              className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--line)] text-sm text-[var(--ink2)] transition active:bg-gray-300"
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
         {/* Spice tolerance */}
         <p className="mt-5 text-[11px] font-bold text-[var(--ink2)]">
@@ -88,7 +93,7 @@ export default function ProfilePanel({
               >
                 <span className="text-[11px] font-bold">{a.en}</span>
                 <span className={`text-[9.5px] font-medium ${on ? "opacity-80" : "opacity-55"}`}>
-                  {a.ko}
+                  {a.koLabel ?? a.ko}
                 </span>
               </button>
             );
@@ -98,7 +103,7 @@ export default function ProfilePanel({
         <p className="mt-5 rounded-xl bg-[var(--bg2)] p-3 text-xs leading-relaxed text-[var(--ink2)]">
           {profile.allergies.length
             ? `${profile.name || "Guest"} · spice ${SPICE_LABELS[profile.spiceTolerance]} · avoiding ${profile.allergies
-                .map((k) => ALLERGENS.find((x) => x.id === k)?.en ?? k)
+                .map(allergenEn)
                 .join(", ")}`
             : `${profile.name || "Guest"} · spice ${SPICE_LABELS[profile.spiceTolerance]} · no allergies set`}
         </p>

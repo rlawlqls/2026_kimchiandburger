@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addHistoryEntry } from "./profile";
+import { addHistoryEntry, normalizeAllergies } from "./profile";
 import { timeAgo } from "./time";
 import type { ScanHistoryEntry } from "../types";
 
@@ -30,6 +30,25 @@ describe("addHistoryEntry", () => {
     let list: ScanHistoryEntry[] = [];
     for (let i = 0; i < 40; i++) list = addHistoryEntry(list, mk(`item-${i}`, i));
     expect(list.length).toBe(30);
+  });
+});
+
+describe("normalizeAllergies", () => {
+  it("keeps current ids", () => {
+    expect(normalizeAllergies(["peanut", "pork"])).toEqual(["peanut", "pork"]);
+  });
+
+  it("rewrites ids saved by the 6-allergen build", () => {
+    expect(normalizeAllergies(["gluten", "dairy", "nuts"])).toEqual(["wheat", "milk", "treenut"]);
+  });
+
+  it("expands the old seafood bucket and dedupes", () => {
+    expect(normalizeAllergies(["seafood", "fish"])).toEqual(["fish", "shellfish", "mollusk"]);
+  });
+
+  it("drops junk", () => {
+    expect(normalizeAllergies(["nope", 7, null])).toEqual([]);
+    expect(normalizeAllergies("gluten")).toEqual([]);
   });
 });
 

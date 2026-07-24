@@ -1,3 +1,4 @@
+import { allergenInfo } from "../data/allergens";
 import type { Allergen, MenuItem, SpiceLevel } from "../types";
 
 // Rule-based vendor conversation, ported from the golmokmal-en mockup. The vendor
@@ -17,16 +18,6 @@ export interface ReplyContext {
   spiceTolerance: SpiceLevel;
   allergies: Allergen[];
 }
-
-// Korean word for each allergen, used when rewriting "does it contain …?".
-const ALLERGEN_KO: Record<Allergen, string> = {
-  gluten: "밀가루",
-  seafood: "해산물",
-  egg: "계란",
-  dairy: "유제품",
-  soy: "대두",
-  nuts: "견과류",
-};
 
 // Vendor questions offered as quick buttons (Korean + English gloss).
 export const VENDOR_QUESTIONS: { ko: string; en: string }[] = [
@@ -73,10 +64,13 @@ const RULES: { keys: string[]; reply: (ctx: ReplyContext) => VendorReply }[] = [
   {
     keys: ["알레르기", "땅콩", "견과", "들어가"],
     reply: ({ allergies }) => {
-      const a = allergies[0];
-      const ko = a ? ALLERGEN_KO[a] : "견과류";
-      const en = a ?? "nuts";
-      return { ko: `${ko} 들어가나요?`, en: `Does it contain ${en}?`, note: "Rewritten with your allergen" };
+      // No allergy set → fall back to the most common street-food question.
+      const a = allergies[0] ? allergenInfo(allergies[0]) : allergenInfo("treenut");
+      return {
+        ko: `${a.ko} 들어가나요?`,
+        en: `Does it contain ${a.word}?`,
+        note: "Rewritten with your allergen",
+      };
     },
   },
 ];

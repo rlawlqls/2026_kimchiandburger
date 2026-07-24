@@ -1,4 +1,5 @@
-import type { ScanHistoryEntry, UserProfile } from "../types";
+import { LEGACY_ALLERGEN_IDS, isAllergen } from "../data/allergens";
+import type { Allergen, ScanHistoryEntry, UserProfile } from "../types";
 
 // localStorage keys — namespaced so they never collide with other apps on the origin.
 const PROFILE_KEY = "jangbogi.profile";
@@ -23,11 +24,30 @@ export function loadProfile(): UserProfile {
         typeof parsed.spiceTolerance === "number"
           ? (Math.max(0, Math.min(4, parsed.spiceTolerance)) as UserProfile["spiceTolerance"])
           : DEFAULT_PROFILE.spiceTolerance,
-      allergies: Array.isArray(parsed.allergies) ? parsed.allergies : [],
+      allergies: normalizeAllergies(parsed.allergies),
     };
   } catch {
     return { ...DEFAULT_PROFILE };
   }
+}
+
+/**
+ * Keep only ids we still know about, rewriting the pre-12-allergen ones saved by
+ * older builds. Anything unrecognized is dropped so a stale profile can never
+ * silently flag (or fail to flag) a dish.
+ */
+export function normalizeAllergies(raw: unknown): Allergen[] {
+  if (!Array.isArray(raw)) return [];
+  const out: Allergen[] = [];
+  for (const v of raw) {
+    const mapped = isAllergen(v)
+      ? [v]
+      : typeof v === "string"
+        ? (LEGACY_ALLERGEN_IDS[v] ?? [])
+        : [];
+    for (const a of mapped) if (!out.includes(a)) out.push(a);
+  }
+  return out;
 }
 
 export function saveProfile(profile: UserProfile): void {

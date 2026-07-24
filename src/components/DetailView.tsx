@@ -4,6 +4,7 @@ import { hasKoreanVoice, speak } from "../utils/speak";
 import { buildOrderPhrase, clampQty, MAX_QTY, MIN_QTY } from "../utils/orderPhrase";
 import { otherPhrases, type OtherPhrase } from "../utils/otherPhrases";
 import { artFor } from "../data/foodArt";
+import { allergenEn, ingredientMatches } from "../data/allergens";
 
 const SPICY_LABEL = ["Not spicy", "Mild", "Medium", "Spicy", "Very spicy"] as const;
 const MAX_SPICE = 4;
@@ -65,7 +66,11 @@ export default function DetailView({
 
       {/* Alert banner — allergens first, then spice, else safe */}
         {flagged.length > 0 ? (
-          <Alert tone="danger" icon="🚫" title={`Contains your allergen — ${flagged.join(", ")}`}>
+          <Alert
+            tone="danger"
+            icon="🚫"
+            title={`Contains your allergen — ${flagged.map(allergenEn).join(", ")}`}
+          >
             See the red ingredients below. Confirm with the vendor before ordering.
           </Alert>
         ) : menu.spicy > 0 && spiceDiff >= 2 ? (
@@ -163,7 +168,7 @@ export default function DetailView({
           </div>
           <div className="flex flex-wrap gap-1.5">
             {menu.ingredients.map((ing) => {
-              const isAllergen = flagged.some((a) => ing.toLowerCase().includes(a));
+              const isAllergen = flagged.some((a) => ingredientMatches(ing, a));
               return (
                 <span
                   key={ing}

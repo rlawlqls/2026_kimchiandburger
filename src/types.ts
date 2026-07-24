@@ -18,7 +18,20 @@ export interface Phrase {
   en: string;
 }
 
-export type Allergen = "gluten" | "seafood" | "egg" | "dairy" | "soy" | "nuts";
+/** The 12 allergens the profile can flag — labels live in `data/allergens.ts`. */
+export type Allergen =
+  | "peanut"
+  | "treenut"
+  | "shellfish"
+  | "mollusk"
+  | "milk"
+  | "egg"
+  | "wheat"
+  | "soy"
+  | "sesame"
+  | "buckwheat"
+  | "fish"
+  | "pork";
 
 export interface MenuItem {
   id: string;
