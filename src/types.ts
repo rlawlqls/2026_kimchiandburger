@@ -7,8 +7,11 @@ export interface OcrToken {
 
 export interface OcrResult {
   tokens: OcrToken[];
-  /** "gemma" = cloud OCR via /api/ocr; "tesseract" = client-side fallback. */
-  engine: "gemma" | "tesseract";
+  /**
+   * "vision" = Google Cloud Vision via /api/vision (primary);
+   * "gemma" = LLM OCR via /api/ocr; "tesseract" = client-side fallback.
+   */
+  engine: "vision" | "gemma" | "tesseract";
   imageWidth: number;
   imageHeight: number;
 }

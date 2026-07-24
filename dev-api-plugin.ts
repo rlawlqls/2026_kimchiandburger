@@ -4,7 +4,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { loadEnv, type Plugin } from "vite";
 
 // Routes we serve locally — must match the files in ./api
-const ROUTES = new Set(["gemini", "ocr"]);
+const ROUTES = new Set(["gemini", "ocr", "vision"]);
 
 /**
  * Runs the Vercel serverless handlers in api/*.js during `vite dev`, so the same
