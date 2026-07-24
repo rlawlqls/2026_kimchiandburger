@@ -516,6 +516,24 @@ export const MENU_DB: MenuItem[] = [
       { ko: "우동 얼마예요?", roman: "u-dong eol-ma-ye-yo?", en: "How much is the udon?" },
     ],
   },
+  {
+    id: "japchae",
+    ingredients: ["glass noodles (dangmyeon)", "beef", "spinach", "carrot", "onion", "wood ear mushroom", "soy sauce", "sesame oil"],
+    hangul: "잡채",
+    aliases: ["잡체", "짭채", "잡차이", "고기잡채"],
+    roman: "jap-chae",
+    meaning: "Stir-fried glass noodles with vegetables & beef",
+    priceTypical: "₩6,000~8,000",
+    spicy: 0,
+    allergens: ["soy", "sesame", "wheat"],
+    emoji: "🥢",
+    image: null,
+    story: "Sweet-savory sweet potato noodles — the dish that shows up at every Korean celebration.",
+    phrases: [
+      { ko: "잡채 주세요", roman: "jap-chae ju-se-yo", en: "One japchae, please" },
+      { ko: "잡채 얼마예요?", roman: "jap-chae eol-ma-ye-yo?", en: "How much is the japchae?" },
+    ],
+  },
 
   // ───────── 밥류 ─────────
   {
